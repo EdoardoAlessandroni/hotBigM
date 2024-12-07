@@ -1,0 +1,464 @@
+{
+  "P": 19,
+  "N": 85,
+  "values": [
+    105,
+    173,
+    120,
+    153,
+    197,
+    174,
+    230,
+    147,
+    249,
+    231,
+    248,
+    148,
+    134,
+    209,
+    173,
+    153,
+    293,
+    114,
+    178,
+    143,
+    170,
+    259,
+    277,
+    214,
+    142,
+    197,
+    253,
+    246,
+    164,
+    121,
+    217,
+    266,
+    156,
+    177,
+    239,
+    162,
+    208,
+    161,
+    244,
+    145,
+    226,
+    150,
+    298,
+    300,
+    202,
+    246,
+    171,
+    102,
+    254,
+    146,
+    136,
+    227,
+    102,
+    239,
+    117,
+    116,
+    128,
+    288,
+    268,
+    248,
+    245,
+    278,
+    259,
+    258,
+    297,
+    272,
+    130,
+    237,
+    105,
+    165,
+    165,
+    256,
+    290,
+    173,
+    156,
+    129,
+    219,
+    287,
+    295,
+    276,
+    266,
+    172,
+    107,
+    278,
+    215
+  ],
+  "measurements": {
+    "3906250": {
+      "rate": 0.0,
+      "temperature_start": 8892182.926640145,
+      "temperature_end": 2125998.9199407715,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5212007.208735904
+    },
+    "4882812": {
+      "rate": 0.015625,
+      "temperature_start": 9096167.279667733,
+      "temperature_end": 2174768.779692783,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5331569.292334519
+    },
+    "5371093": {
+      "rate": 0.0859375,
+      "temperature_start": 9170021.72920206,
+      "temperature_end": 2192426.365151624,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5374857.866866304
+    },
+    "5615234": {
+      "rate": 0.1748046875,
+      "temperature_start": 9210601.594884943,
+      "temperature_end": 2202128.454202749,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5398643.089709065
+    },
+    "5676269": {
+      "rate": 0.193359375,
+      "temperature_start": 9205063.021124262,
+      "temperature_end": 2200804.257216434,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5395396.745520585
+    },
+    "5706786": {
+      "rate": 0.216796875,
+      "temperature_start": 9223255.403119095,
+      "temperature_end": 2205153.8061169954,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5406059.911908794
+    },
+    "5714415": {
+      "rate": 0.212890625,
+      "temperature_start": 9240407.561573954,
+      "temperature_end": 2209254.651843014,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5416113.368326597
+    },
+    "5718230": {
+      "rate": 0.2177734375,
+      "temperature_start": 9242101.34239396,
+      "temperature_end": 2209659.611595154,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5417106.150179684
+    },
+    "5719183": {
+      "rate": 0.2119140625,
+      "temperature_start": 9223637.052555552,
+      "temperature_end": 2205245.053260289,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5406283.609467698
+    },
+    "5719660": {
+      "rate": 0.21875,
+      "temperature_start": 9246709.187404647,
+      "temperature_end": 2210761.28410873,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5419806.962973411
+    },
+    "5719898": {
+      "rate": 0.232421875,
+      "temperature_start": 9219241.063944148,
+      "temperature_end": 2204194.0327047054,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5403706.972828396
+    },
+    "5720017": {
+      "rate": 0.2041015625,
+      "temperature_start": 9240028.585848859,
+      "temperature_end": 2209164.043947418,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5415891.237919763
+    },
+    "5720077": {
+      "rate": 0.236328125,
+      "temperature_start": 9207909.473533504,
+      "temperature_end": 2201484.804928692,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5397065.146924232
+    },
+    "5720137": {
+      "rate": 0.251953125,
+      "temperature_start": 9209682.081539748,
+      "temperature_end": 2201908.6111794007,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5398104.132039927
+    },
+    "5722045": {
+      "rate": 0.2509765625,
+      "temperature_start": 9182906.247081924,
+      "temperature_end": 2195506.876576382,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5382409.9157417
+    },
+    "5737304": {
+      "rate": 0.255859375,
+      "temperature_start": 9201409.216032688,
+      "temperature_end": 2199930.682556258,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5393255.127581133
+    },
+    "5859375": {
+      "rate": 0.3115234375,
+      "temperature_start": 9216745.159910899,
+      "temperature_end": 2203597.2962989495,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5402244.039607056
+    },
+    "6103515": {
+      "rate": 0.412109375,
+      "temperature_start": 9319415.205034789,
+      "temperature_end": 2228144.2952579707,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5462422.4029765045
+    },
+    "6164550": {
+      "rate": 0.4599609375,
+      "temperature_start": 9307640.073841736,
+      "temperature_end": 2225329.022967115,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5455520.6029159
+    },
+    "6195067": {
+      "rate": 0.4931640625,
+      "temperature_start": 9313418.144404031,
+      "temperature_end": 2226710.4803523403,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5458907.324227384
+    },
+    "6195126": {
+      "rate": 0.515625,
+      "temperature_start": 9283346.400391147,
+      "temperature_end": 2219520.7390009123,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5441281.264589671
+    },
+    "6195186": {
+      "rate": 0.5244140625,
+      "temperature_start": 9295425.864444677,
+      "temperature_end": 2222408.7731026774,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5448361.444366006
+    },
+    "6195305": {
+      "rate": 0.505859375,
+      "temperature_start": 9298141.030255314,
+      "temperature_end": 2223057.931990714,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5449952.894282713
+    },
+    "6195543": {
+      "rate": 0.517578125,
+      "temperature_start": 9271048.984627975,
+      "temperature_end": 2216580.595636088,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5434073.335992695
+    },
+    "6196020": {
+      "rate": 0.5390625,
+      "temperature_start": 9275794.099434765,
+      "temperature_end": 2217715.0874743075,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5436854.607226463
+    },
+    "6196974": {
+      "rate": 0.5361328125,
+      "temperature_start": 9284133.580660172,
+      "temperature_end": 2219708.943001611,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5441742.657396204
+    },
+    "6198881": {
+      "rate": 0.5419921875,
+      "temperature_start": 9255350.97155825,
+      "temperature_end": 2212827.4161179895,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5424872.203047361
+    },
+    "6202696": {
+      "rate": 0.5234375,
+      "temperature_start": 9268604.61408585,
+      "temperature_end": 2215996.1801809217,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5432640.608282133
+    },
+    "6210326": {
+      "rate": 0.50390625,
+      "temperature_start": 9312632.265128523,
+      "temperature_end": 2226522.587401339,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5458446.693976866
+    },
+    "6225585": {
+      "rate": 0.546875,
+      "temperature_start": 9310947.06241797,
+      "temperature_end": 2226119.678557461,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5457458.940041972
+    },
+    "6347656": {
+      "rate": 0.599609375,
+      "temperature_start": 9341736.224773005,
+      "temperature_end": 2233480.9447901407,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5475505.502676735
+    },
+    "6469726": {
+      "rate": 0.6865234375,
+      "temperature_start": 9339404.656235445,
+      "temperature_end": 2232923.4987464063,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5474138.892011427
+    },
+    "6530761": {
+      "rate": 0.6923828125,
+      "temperature_start": 9352050.74745985,
+      "temperature_end": 2235947.0056295143,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5481551.1910124365
+    },
+    "6561278": {
+      "rate": 0.73828125,
+      "temperature_start": 9371310.879026778,
+      "temperature_end": 2240551.838801191,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5492840.201303408
+    },
+    "6565092": {
+      "rate": 0.724609375,
+      "temperature_start": 9355203.413028952,
+      "temperature_end": 2236700.7647064636,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5483399.074238462
+    },
+    "6566999": {
+      "rate": 0.7216796875,
+      "temperature_start": 9371685.260239039,
+      "temperature_end": 2240641.3482118137,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5493059.638711883
+    },
+    "6567953": {
+      "rate": 0.7158203125,
+      "temperature_start": 9394201.649113048,
+      "temperature_end": 2246024.7078235126,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5506257.250827403
+    },
+    "6568430": {
+      "rate": 0.732421875,
+      "temperature_start": 9369818.468376068,
+      "temperature_end": 2240195.023893345,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5491965.449272993
+    },
+    "6568668": {
+      "rate": 0.7333984375,
+      "temperature_start": 9400026.486216886,
+      "temperature_end": 2247417.346447094,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5509671.383580335
+    },
+    "6568787": {
+      "rate": 0.7353515625,
+      "temperature_start": 9366108.900966754,
+      "temperature_end": 2239308.117228164,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5489791.147165384
+    },
+    "6568847": {
+      "rate": 0.7529296875,
+      "temperature_start": 9345458.328219589,
+      "temperature_end": 2234370.8486498147,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5477687.152577024
+    },
+    "6568907": {
+      "rate": 0.763671875,
+      "temperature_start": 9305918.542536197,
+      "temperature_end": 2224917.428454675,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5454511.55557077
+    },
+    "6576537": {
+      "rate": 0.7646484375,
+      "temperature_start": 9345121.973310709,
+      "temperature_end": 2234290.430806536,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5477490.003662721
+    },
+    "6591796": {
+      "rate": 0.7900390625,
+      "temperature_start": 9315832.190860048,
+      "temperature_end": 2227287.6457346226,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5460322.277972126
+    },
+    "6835937": {
+      "rate": 0.8515625,
+      "temperature_start": 9408865.472591689,
+      "temperature_end": 2249530.626801449,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5514852.210502527
+    },
+    "7812500": {
+      "rate": 0.9970703125,
+      "temperature_start": 9578534.301993053,
+      "temperature_end": 2290096.115729285,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 5614300.812632423
+    },
+    "15625000": {
+      "rate": 1.0,
+      "temperature_start": 11216617.860020598,
+      "temperature_end": 2681739.4168028454,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 6574436.62893161
+    },
+    "31250000": {
+      "rate": 1.0,
+      "temperature_start": 14375532.950031154,
+      "temperature_end": 3436992.6684455876,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 8425982.909158727
+    },
+    "62500000": {
+      "rate": 1.0,
+      "temperature_start": 18623974.158654995,
+      "temperature_end": 4452736.664659001,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 10916137.05779866
+    },
+    "125000000": {
+      "rate": 1.0,
+      "temperature_start": 28803501.68813129,
+      "temperature_end": 6886522.014298803,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 16882700.195653815
+    },
+    "250000000": {
+      "rate": 1.0,
+      "temperature_start": 49623329.50634736,
+      "temperature_end": 11864257.15763156,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 29085900.868470315
+    },
+    "500000000": {
+      "rate": 1.0,
+      "temperature_start": 91842648.32216431,
+      "temperature_end": 21958316.956396464,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 53832062.28140257
+    },
+    "1000000000": {
+      "rate": 1.0,
+      "temperature_start": 176767560.66192234,
+      "temperature_end": 42262698.16401632,
+      "temperature_interval": 161.0,
+      "offset_increase_rate": 103609407.05351785
+    }
+  }
+}
