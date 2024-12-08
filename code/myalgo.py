@@ -7,7 +7,7 @@ import random
 ### Main function
 
 
-def M_method(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
+def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
     ## evaluate violation peaks and cumulatives
     match problem_type:
         case "NPP":
@@ -57,6 +57,7 @@ def M_method(size, problem_type, info_instance, info_type, beta, peak_max, min_p
     print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
     
     return M, min_pfeas
+
 
 
 ### Random feasible Sampler functions
