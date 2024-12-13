@@ -16,7 +16,6 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
             Nc = size
             p_viols = p_viols_exact_TSP(Nc, peak_max)
 
-    #cumul_exp, cumul_tail = cumulatives_exp_unique(E_f, beta, size, info_instance, info_type, problem_type, circle_flag = circle_flag)
     cumul_exp_feas = cumulative_exp_integral_feas(beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag, n_chunks = 20_000)
     
     ## Ensure poly is correctly built
@@ -36,7 +35,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
 
     x0 = 1
     M = my_root_finder(func_M, x0)
-    print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required feasible probability in at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
+    #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required feasible probability in at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
     
     return M, min_pfeas
 
@@ -98,7 +97,6 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
             Nc = size
             p_viols = p_viols_exact_TSP(Nc, peak_max)
 
-    #cumul_exp, cumul_tail = cumulatives_exp_unique(E_f, beta, size, info_instance, info_type, problem_type, circle_flag = circle_flag)
     cumul_exp_good, cumul_exp_tail = cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
     
     ## Ensure poly is correctly built
@@ -120,11 +118,6 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
     
     ## build and solve poly
     p_feas_term = -(1/min_pfeas - 1) * cumul_exp_good  +  cumul_exp_tail
-
-    # poly_alpha = lambda alpha:  p_feas_term*p_viols[0] + np.sum([ np.exp(-beta*E_LB)* p_violation * alpha**(j+1) for j, p_violation in enumerate(p_viols[1:])])
-    # print(f"Poly_a(1) = {poly_alpha(1)}\tPoly_a(0) = {poly_alpha(0)}")
-    # alpha_star = sp.optimize.brentq(poly_alpha, a = 0, b = 1)
-    # M = -np.log(alpha_star)/beta
     def func_M(M):
         ''' Implements g function.  g(beta, M) =  \sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
         M = np.float128(M)
@@ -133,10 +126,7 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
     #print(f"Func_M(0) = {func_M(0)!s}\tFunc_M(1e9) = {func_M(1e9)!s}")
     x0 = np.max((1, E_f))
     M = my_root_finder(func_M, x0)
-    #result = sp.optimize.root(func_M, x0 = 0)  # scipy root finder. However, float128 are not usable inside it
-    #M = result.x[0]
-    print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
-    
+    #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
     return M, min_pfeas
 
 
