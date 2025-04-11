@@ -11,27 +11,30 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     match problem_type:
         case "NPP":
             N, P = size
-            p_viols = p_viols_exact_NPP(N, P, peak_max)
+            n_viols = n_viols_exact_NPP(N, P, peak_max)
         case "TSP":
             Nc = size
-            p_viols = p_viols_exact_TSP(Nc, peak_max)
+            n_viols = n_viols_exact_TSP(Nc, peak_max)
+        case "PO":
+            N, w = size
+            n_viols = n_viols_exact_PO(N, w, peak_max)
 
-    cumul_exp_feas = cumulative_exp_integral_feas(beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag, n_chunks = 20_000)
+    cumul_exp_feas = cumulative_exp_integral_feas(beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
     
     ## Ensure poly is correctly built
     # check if poly(1)>0
-    min_pfeas_triviality = f_min_pfeas_triviality_feas(p_viols[0], p_viols[1:], cumul_exp_feas, beta, E_LB)
+    min_pfeas_triviality = f_min_pfeas_triviality_feas(n_viols[0], n_viols[1:], cumul_exp_feas, beta, E_LB)
     if min_pfeas <= min_pfeas_triviality:
         print(f"With tolerance {min_pfeas}, the sampling probability requirement is satisfied for any M. Setting M=0.")
         return 0
     
     ## build and solve poly
-    p_feas_term = -(1/min_pfeas - 1) * cumul_exp_feas
+    p_feas_term = -(1/min_pfeas - 1) * cumul_exp_feas * n_viols[0]
     def func_M(M):
         ''' Implements g function.  g(beta, M) =  \sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
         M = np.float128(M)
-        exp_vec = np.array([ np.exp(-beta*(E_LB + M*j)) for j in np.arange(1, len(p_viols)) ], dtype = np.float128)
-        return np.dot(exp_vec.flatten(), p_viols[1:]) + np.float128(p_feas_term)*p_viols[0]
+        exp_vec = np.array([ np.exp(-beta*(E_LB + M*j)) for j in np.arange(1, len(n_viols)) ], dtype = np.float128)
+        return np.dot(exp_vec.flatten(), n_viols[1:]) + np.float128(p_feas_term)
 
     x0 = 1
     M = my_root_finder(func_M, x0)
@@ -40,7 +43,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     return M, min_pfeas
 
 
-def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 20_000, n_samples = 10_000, circle_flag = False):
+def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 10_000, n_samples = 10_000, circle_flag = False):
     ''' Computes the exponential-cumulative until E_f (ie approximates the Gibbs integral) and the tail (ie 1 - cumulative)'''
     match problem_type:
         case "NPP":
@@ -81,21 +84,76 @@ def f_min_pfeas_triviality_feas(p_feas, p_violations, cumul_exp_feas, beta, E_LB
 
 
 
-
+######### Optimality strategy
 
 
 ### Main function
 
 
 def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
+    ''' version based on number of solution of a given violation family, rather than probabilities '''
+    ## evaluate violation peaks and cumulatives 
+    match problem_type:
+        case "NPP":
+            N, P = size
+            n_viols = n_viols_exact_NPP(N, P, peak_max)
+        case "TSP":
+            Nc = size
+            n_viols = n_viols_exact_TSP(Nc, peak_max)
+        case "PO":
+            N, w = size
+            n_viols = n_viols_exact_PO(N, w, peak_max)
+
+    cumul_exp_good, cumul_exp_tail = cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
+
+    ## Ensure poly is correctly built
+    # check if poly(1)>0
+    min_pfeas_triviality = f_min_pfeas_triviality(n_viols[0], n_viols[1:], cumul_exp_good, cumul_exp_tail, beta, E_LB)
+    if min_pfeas <= min_pfeas_triviality:
+        print(f"With tolerance {min_pfeas}, the sampling probability requirement is satisfied for any M. Setting M=0.")
+        return 0
+    # ensures poly(0)<0 and thus solution existence (decrease desidered probability if it is unattainable)
+    max_pfeas_existence = f_min_pfeas_existence(cumul_exp_good, cumul_exp_tail)
+    if min_pfeas >= max_pfeas_existence:
+        epsilon = 1e-2
+        if max_pfeas_existence < epsilon:
+            raise ValueError("Modified eta as \t\t[eta_new = eta_max - epsilon] is negative")
+        if np.isclose(max_pfeas_existence, 0):
+            raise ValueError(f"Maximum eta possible is too small, evaluates to {max_pfeas_existence}.\nYou should increase E_f to allow more random samples in [E_LB, E_f] to evaluate the integral. Atm E_LB = {E_LB} and E_f = {E_f}")
+        print(f"With tolerance {min_pfeas}, poly root doesn't exist. Feasibility tolerance decreased to {max_pfeas_existence - epsilon}")
+        min_pfeas = max_pfeas_existence - epsilon
+    
+    ## build and solve poly
+    p_feas_term = n_viols[0] * (-(1/min_pfeas - 1) * cumul_exp_good  +  cumul_exp_tail)
+    def func_M(M):
+        ''' Implements g function.  g(beta, M) =  \sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
+        M = np.float128(M)
+        exp_vec = np.array([ np.exp(-beta*(E_LB + M*j)) for j in np.arange(1, len(n_viols)) ], dtype = np.float128)
+        return np.dot(exp_vec.flatten(), n_viols[1:]) + np.float128(p_feas_term)
+    #print(f"Func_M(0) = {func_M(0)!s}\tFunc_M(1e9) = {func_M(1e9)!s}")
+    x0 = np.max((1, E_f))
+    M = my_root_finder(func_M, x0)
+    #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
+    return M, min_pfeas
+
+
+def M_method_opt_probold(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
+    ''' version based on probabilities of random sampling a bitstring from a certain violation family, rather than number of bitstrings '''
     ## evaluate violation peaks and cumulatives
     match problem_type:
         case "NPP":
             N, P = size
-            p_viols = p_viols_exact_NPP(N, P, peak_max)
+            n_viols = n_viols_exact_NPP(N, P, peak_max)
+            n_bits = N*P
         case "TSP":
             Nc = size
-            p_viols = p_viols_exact_TSP(Nc, peak_max)
+            n_viols = n_viols_exact_TSP(Nc, peak_max)
+            n_bits = Nc**2
+        case "PO":
+            N, w = size
+            n_viols = n_viols_exact_PO(N, w, peak_max)
+            n_bits = N*w
+    p_viols = n_viols / np.longdouble(2)**n_bits
 
     cumul_exp_good, cumul_exp_tail = cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
     
@@ -125,9 +183,12 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
         return np.dot(exp_vec.flatten(), p_viols[1:]) + np.float128(p_feas_term)*p_viols[0]
     #print(f"Func_M(0) = {func_M(0)!s}\tFunc_M(1e9) = {func_M(1e9)!s}")
     x0 = np.max((1, E_f))
+    print(f"Value of the g function at 1 and E_F, respectively: {func_M(1)}\t{func_M(E_f)}")
     M = my_root_finder(func_M, x0)
     #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
     return M, min_pfeas
+
+
 
 
 
@@ -256,11 +317,17 @@ def cumulatives_exp_integral(E_f, beta, size,  info_instance, info_type, problem
         case _:
             raise ValueError(f"Problem type {problem_type} is not amomg the implemented ones")
             
+    # delta = (E_f - E_LB) / n_chunks
+    # cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta) ) * np.sum( np.logical_and(eners > E_LB + j*delta, eners <= E_LB + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
+    
+    # delta = (np.max(eners) - E_f) / n_chunks
+    # cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta) ) * np.sum( np.logical_and(eners > E_f + j*delta, eners <= E_f + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
+
     delta = (E_f - E_LB) / n_chunks
     cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta) ) * np.sum( np.logical_and(eners > E_LB + j*delta, eners <= E_LB + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
     
-    delta = (np.max(eners) - E_f) / n_chunks
-    cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta) ) * np.sum( np.logical_and(eners > E_f + j*delta, eners <= E_f + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
+    n_chunks_tail = np.ceil((np.max(eners) - E_f) / delta)
+    cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta) ) * np.sum( np.logical_and(eners > E_f + j*delta, eners <= E_f + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks_tail) ])
 
     return cumul_exp_good, cumul_exp_tail
 
@@ -290,22 +357,60 @@ def f_min_pfeas_existence(cumul_exp_good, cumul_exp_tail):
     return cumul_exp_good / (cumul_exp_good + cumul_exp_tail) 
 
 
-def p_viols_exact_NPP(N, P, v_max):
-    ''' Returns, in order, the probability of sampling solutions of a given violation family, starting from v=1 '''
-    p = np.ndarray((8), dtype = np.float128)
-    p[0] = (P / np.float128(2)**P)**N # feasible solutions
-    for v in np.arange(1, 4):
-        p[v] = (P / np.float128(2)**P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v / float(2)**(v*P)
-    for v in np.arange(4, 8):
-        p[v] = (P /np.float128(2)**P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v / float(2)**(v*P)  +  np.float128(v-3) * comb(N, v-3) * (P / np.float128(2)**P)**(N - v + 3) * comb(P, 3) * (1 + comb(P, 2))**(v-4) / float(2)**((v-3)*P)
-    return p[:v_max+1]
 
-def p_viols_exact_TSP(Nc, v_max):
-    ''' Returns, in order, the probability of sampling solutions of a given violation family'''
-    p = np.ndarray((5), dtype=np.longdouble)
-    p[0] = np.longdouble(factorial(Nc)) # feasible solutions
-    p[1] = 0
-    p[2] = np.longdouble(factorial(Nc)) * Nc * (2*Nc - 1 + (Nc-1)*(Nc-2)/4) 
-    p[3] = 0
-    p[4] = np.longdouble(factorial(Nc))**2/factorial(Nc-3)/2 * ( 1 + (Nc-1)*(Nc+5)/4 + 1/(Nc-2) + 2*(Nc-2) + (Nc-3)*(Nc-4)/2*( 1 + (Nc-5)/16 ) )
-    return p[:v_max+1] / np.longdouble(2)**(Nc**2)
+### Penalization densities
+
+
+def n_viols_exact_NPP(N, P, v_max):
+    ''' Returns, in order, the number of bitstring of a given violation family '''
+    if v_max >= 8:
+        raise ValueError(f"Peaks violations not implemented for NPP for v greater than {v_max}")
+    p = np.ndarray((v_max + 1), dtype = np.float128)
+    for v in range(v_max + 1):
+        match v:
+            case 0:
+                p[v] = np.float128(P)**N # feasible solutions
+            case i if 1 <= i < 4:
+                p[v] = np.float128(P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v
+            case i if 4 <= i < 8:
+                p[v] = np.float128(P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v  +  np.float128(v-3) * comb(N, v-3) * P**(N - v + 3) * comb(P, 3) * (1 + comb(P, 2))**(v-4)
+    return p
+
+def n_viols_exact_TSP(Nc, v_max):
+    ''' Returns, in order, the number of bitstring of a given violation family'''
+    if v_max >= 8:
+        raise ValueError(f"Peaks violations not implemented for TSP for v greater than {v_max}")
+    p = np.zeros((v_max+1), dtype=np.longdouble)
+    for i in range(v_max + 1):
+        match i:
+            case 0:
+                p[i] = np.longdouble(factorial(Nc)) # feasible solutions
+            case 2:
+                p[i] = np.longdouble(factorial(Nc)) * (Nc + 4*comb(Nc,2) + 3/2*comb(Nc,3))
+            case 4:
+                p[i] = np.longdouble(factorial(Nc)) * (comb(Nc,2) + 21*comb(Nc,3) + 57*comb(Nc,4) + 45*comb(Nc,5) + 45/4*comb(Nc,6))
+            case 6:
+                p[i] = np.longdouble(factorial(Nc)) * 5*(47/15*comb(Nc,3) + 24*comb(Nc,4) + 137*comb(Nc,5) + 1157*comb(Nc,6) + 567/4*comb(Nc,7) + 126*comb(Nc,8) + 63/2*comb(Nc,9))
+    return p
+
+
+def n_viols_exact_PO(N, w, v_max):
+    ''' Returns, in order, the number of bitstring of a given violation family'''
+    if v_max >= 36:
+        raise ValueError(f"Peaks violations not implemented for PO for v greater than {v_max}")
+    p = np.zeros((v_max + 1))
+    for i in range(v_max + 1):
+        match i:
+            case 0:
+                p[i] = comb(2**w+N-2, N-1)  # feasible solutions
+            case 1:
+                p[i] = comb(2**w+N-1, N-1) + comb(2**w+N-3, N-1) - N
+            case 4:
+                p[i] = comb(2**w+N, N-1) + comb(2**w+N-4, N-1) - N**2
+            case 9:
+                p[i] = comb(2**w+N+1, N-1) + comb(2**w+N-5, N-1) - (N+1)/2 * N**2 
+            case 16:
+                p[i] = comb(2**w+N+2, N-1) + comb(2**w+N-6, N-1) - (N+1)/2 * N**2 * (N+2)/3
+            case 25:
+                p[i] = comb(2**w+N+3, N-1) + comb(2**w+N-7, N-1) - (N+1)/2 * N**2 * (N+2)/3 * (N+3)/4
+    return p

@@ -1,0 +1,38 @@
+ONE-SHOT strategy (if we know how to pick an annealing schedule from the LCBO)
+1. Get LCBO
+2. Choose an annealing schedule for SA (same as DA? same only its final temperature? completely different to adapt to SA different scheme?)
+3. From [LCBO, \beta_{final}] compute M^*, \eta_{guarantee} using our algorithm. Also, compute M_{\ell_1}( \beta_{final} )
+4. Run SA on QUBO(M^*) and collect samples X
+5. From [LCBO, X] computed sampled energies [E_o, E_p](both objective and penalization)
+
+
+SCAN strategy (if we have no clue for picking an annealing schedule from the LCBO)
+1. Get LCBO
+2. Scan the M: \forall M do:
+    3. Compute \beta_{initial}, \beta_{final}, schedule from QUBO(M)
+    4. Run SA on QUBO(M^*) and collect samples X
+    5. From [LCBO, X] computed sampled energies [E_o, E_p](both objective and penalization)
+6. From [LCBO, \beta_{final}] compute M^*, \eta_{guarantee} using our algorithm. Also, compute M_{\ell_1}( \beta_{final} )
+7. Compare results of the scan wrt M^* figures of merit
+
+
+DICHOTOMIC search strategy:
+1. Get LCBO and eta_target
+2. Pick M and cycle through:
+    3. Build QUBO(M)
+    4. Compute \beta_{initial}, \beta_{final}, schedule from QUBO(M)
+    5. Run SA and compute prob_success
+    6. if prob_success > eta_target, reduce M, else increase it
+7. Converge to M_ideal, corresponding to the M that ensures eta_target probability of success
+
+
+(also: scan the different possible temperatures?)
+
+
+
+Analysis
+- From [E_o, E_p] compute \eta_{effective} and prob_{feas}
+- log_2(M^* / M_{\ell_1})
+- \eta_{effective} vs \eta_{guarantee} 
+(- M^* vs M_{search} only if we use SA for dichotomic search too)
+- ...
