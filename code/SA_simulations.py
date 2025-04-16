@@ -5,6 +5,7 @@ import os
 import json
 import pickle
 from tqdm import tqdm
+import sys
 
 from simulated_annealing import simulated_annealing
 from timeit import default_timer as timer
@@ -225,19 +226,31 @@ problem_type = "NPP"
 Ps = np.arange(2, 15)
 Ns = 8 * Ps
 
-N_idx = 4 # between 0 and 13
-vseeds = range(42,46) # between 42 and 45
-M_strategies = ["feasibility", "optimality"]
+# N_idx = 0 # between 0 and 13
+# vseeds = range(42,46) # between 42 and 45
+# M_strategies = ["feasibility", "optimality"]
+# temperature_scalers = [1, 10, 100] # only as integers, for keys of dictionary
 etas_req = [.25, .5, .75]
-temperature_scalers = [1, 10, 100] # only as integers, for keys of dictionary
+
+N_idx = int(sys.argv[1])
+vseed = int(sys.argv[2])
+vseeds = [vseed]
+M_strategy = sys.argv[3]
+M_strategies = [M_strategy]
+temp_scaler = int(sys.argv[4])
+temperature_scalers = [temp_scaler]
+
+print("Parameters:", vseeds, M_strategies, temperature_scalers)
 
 
-filename = f"../data/SA_NPP/results-N={Ns[N_idx]}_P={Ps[N_idx]}.txt"
-if os.path.exists(filename):
-    raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
+
+filename = f"../data/SA_NPP/results-N={Ns[N_idx]}_P={Ps[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temp_scaler}.txt"
+print(filename)
+# if os.path.exists(filename):
+#     raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
 
 data = run_database(N_idx, vseeds, M_strategies, etas_req, temperature_scalers)
 
-file = open(filename, "wb")
-pickle.dump(data, file)
-file.close()
+# file = open(filename, "wb")
+# pickle.dump(data, file)
+# file.close()
