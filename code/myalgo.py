@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import factorial, comb
 import random
+from timeit import default_timer as timer
 
 
 
@@ -43,7 +44,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     return M, min_pfeas
 
 
-def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 10_000, n_samples = 10_000, circle_flag = False):
+def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 20_000, n_samples = 10_000, circle_flag = False):
     ''' Computes the exponential-cumulative until E_f (ie approximates the Gibbs integral) and the tail (ie 1 - cumulative)'''
     match problem_type:
         case "NPP":
@@ -92,7 +93,7 @@ def f_min_pfeas_triviality_feas(p_feas, p_violations, cumul_exp_feas, beta, E_LB
 
 def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
     ''' version based on number of solution of a given violation family, rather than probabilities '''
-    ## evaluate violation peaks and cumulatives 
+    ## evaluate violation peaks and cumulatives
     match problem_type:
         case "NPP":
             N, P = size
@@ -316,18 +317,16 @@ def cumulatives_exp_integral(E_f, beta, size,  info_instance, info_type, problem
                     raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
         case _:
             raise ValueError(f"Problem type {problem_type} is not amomg the implemented ones")
-            
-    # delta = (E_f - E_LB) / n_chunks
-    # cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta) ) * np.sum( np.logical_and(eners > E_LB + j*delta, eners <= E_LB + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
-    
-    # delta = (np.max(eners) - E_f) / n_chunks
-    # cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta) ) * np.sum( np.logical_and(eners > E_f + j*delta, eners <= E_f + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
 
-    delta = (E_f - E_LB) / n_chunks
-    cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta) ) * np.sum( np.logical_and(eners > E_LB + j*delta, eners <= E_LB + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
-    
-    n_chunks_tail = np.ceil((np.max(eners) - E_f) / delta)
-    cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta) ) * np.sum( np.logical_and(eners > E_f + j*delta, eners <= E_f + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks_tail) ])
+    delta_avg = (np.max(eners) - E_LB) / (2*n_chunks)
+
+    n_chunks_head = np.ceil((E_f - E_LB) / delta_avg)
+    delta_head = (E_f - E_LB) / n_chunks_head
+    cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta_head) ) * np.sum( np.logical_and(eners > E_LB + j*delta_head, eners <= E_LB + (j+1)*delta_head) ) / len(eners) for j in np.arange(n_chunks_head) ])
+
+    n_chunks_tail = np.ceil((np.max(eners) - E_f) / delta_avg)
+    delta_tail = (E_f - E_LB) / n_chunks_head
+    cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta_tail) ) * np.sum( np.logical_and(eners > E_f + j*delta_tail, eners <= E_f + (j+1)*delta_tail) ) / len(eners) for j in np.arange(n_chunks_tail) ])
 
     return cumul_exp_good, cumul_exp_tail
 
