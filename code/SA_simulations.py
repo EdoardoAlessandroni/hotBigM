@@ -240,17 +240,13 @@ M_strategies = [M_strategy]
 temp_scaler = int(sys.argv[4])
 temperature_scalers = [temp_scaler]
 
-print("Parameters:", vseeds, M_strategies, temperature_scalers)
-
-
-
 filename = f"../data/SA_NPP/results-N={Ns[N_idx]}_P={Ps[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temp_scaler}.txt"
 print(filename)
-# if os.path.exists(filename):
-#     raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
+if os.path.exists(filename):
+    raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
 
 data = run_database(N_idx, vseeds, M_strategies, etas_req, temperature_scalers)
 
-# file = open(filename, "wb")
-# pickle.dump(data, file)
-# file.close()
+file = open(filename, "wb")
+pickle.dump(data, file)
+file.close()
