@@ -7,34 +7,32 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
     """Submits a Slurm job with specified parameters."""
     time.sleep(1)
 
-    print("yo")
-
-    # job_filename = f"send_job_{N_idx}_{vseed}_{M_strat}_{temp_scale}_{eta_req}.sh"
+    job_filename = f"send_job_{N_idx}_{vseed}_{M_strat}_{temp_scale}_{eta_req}.sh"
     
-    # with open(job_filename, "w") as fh:
-    #     fh.writelines("#!/bin/bash\n")
-    #     fh.writelines("#\n")
-    #     fh.writelines(f"#SBATCH --job-name={N_idx}.{vseed}.{M_strat}.{temp_scale}.{eta_req}\n")
-    #     fh.writelines("#SBATCH --nodes=1\n")
-    #     fh.writelines("#SBATCH --ntasks-per-node=1\n")
-    #     fh.writelines("#SBATCH --cpus-per-task=1\n")
-    #     fh.writelines("#SBATCH --time=48:00:00\n")
-    #     fh.writelines("#SBATCH --partition=long1,long2\n")
-    #     fh.writelines("#SBATCH --exclusive\n")
-    #     fh.writelines("#SBATCH --mem=10000mb\n")
-    #     fh.writelines("#SBATCH --output=%x.o\n")
-    #     fh.writelines("#SBATCH --error=%x.e\n")
-    #     # fh.writelines("#     module load gnu8/8.3.0\n")
-    #     # fh.writelines("#     module load cmake\n")
-    #     # fh.writelines("#     module load openmpi3/3.1.4\n")
-    #     # fh.writelines("#     module load python3\n")
-    #     # fh.writelines("#     module load gsl\n")
-    #     fh.writelines("source ~/mambaforge/etc/profile.d/conda.sh\n")
-    #     fh.writelines("conda activate qubo_project\n")
-    #     fh.writelines(f"python ~/hotBigM/code/SA_simulations.py {N_idx} {vseed} {M_strat} {temp_scale} {eta_req} \n")  # Pass parameters
-    #     fh.writelines("conda deactivate\n")
+    with open(job_filename, "w") as fh:
+        fh.writelines("#!/bin/bash\n")
+        fh.writelines("#\n")
+        fh.writelines(f"#SBATCH --job-name={N_idx}.{vseed}.{M_strat}.{temp_scale}.{eta_req}\n")
+        fh.writelines("#SBATCH --nodes=1\n")
+        fh.writelines("#SBATCH --ntasks-per-node=1\n")
+        fh.writelines("#SBATCH --cpus-per-task=1\n")
+        fh.writelines("#SBATCH --time=48:00:00\n")
+        fh.writelines("#SBATCH --partition=long1,long2\n")
+        fh.writelines("#SBATCH --exclusive\n")
+        fh.writelines("#SBATCH --mem=10000mb\n")
+        fh.writelines("#SBATCH --output=%x.o\n")
+        fh.writelines("#SBATCH --error=%x.e\n")
+        # fh.writelines("#     module load gnu8/8.3.0\n")
+        # fh.writelines("#     module load cmake\n")
+        # fh.writelines("#     module load openmpi3/3.1.4\n")
+        # fh.writelines("#     module load python3\n")
+        # fh.writelines("#     module load gsl\n")
+        fh.writelines("source ~/mambaforge/etc/profile.d/conda.sh\n")
+        fh.writelines("conda activate qubo_project\n")
+        fh.writelines(f"python ~/hotBigM/code/SA_simulations.py {N_idx} {vseed} {M_strat} {temp_scale} {eta_req} \n")  # Pass parameters
+        fh.writelines("conda deactivate\n")
 
-    # os.system(f"sbatch {job_filename}")
+    os.system(f"sbatch {job_filename}")
     return 0
 
 # Iterate over parameters and submit jobs
