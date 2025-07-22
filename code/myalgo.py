@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 ######### Feasibility strategy
 
-def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_LB = 0, circle_flag = False):
+def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_LB = 0):
     ## evaluate violation peaks and cumulatives
     match problem_type:
         case "NPP":
@@ -20,7 +20,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
             N, w = size
             n_viols = n_viols_exact_PO(N, w, peak_max)
 
-    cumul_exp_feas = cumulative_exp_integral_feas(beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
+    cumul_exp_feas = cumulative_exp_integral_feas(beta, size, info_instance, info_type, problem_type, E_LB)
     
     ## Ensure poly is correctly built
     # check if poly(1)>0
@@ -44,14 +44,14 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     return M, min_pfeas
 
 
-def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 20_000, n_samples = 10_000, circle_flag = False):
+def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 20_000, n_samples = 10_000):
     ''' Computes the exponential-cumulative until E_f (ie approximates the Gibbs integral) and the tail (ie 1 - cumulative)'''
     match problem_type:
         case "NPP":
             N, P = size
             match info_type: 
                 case "numbers":
-                    eners = RandomSampler_Feasible_NPP_wnumbers(N, P, np.array(info_instance), n_samples)
+                    eners = RandomSampler_Feasible_NPP_wnumbersset(N, P, np.array(info_instance), n_samples)
                 case "seed":
                     eners = RandomSampler_Feasible_NPP_wseed(N, P, info_instance, n_samples)
                 case _:
@@ -62,7 +62,9 @@ def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_
                 case "adjacency":
                     eners = RandomSampler_Feasible_TSP_wadjacency(Nc, info_instance, n_samples)
                 case "seed":
-                    eners = RandomSampler_Feasible_TSP_wseed(Nc, info_instance, n_samples, circle_flag)
+                    eners = RandomSampler_Feasible_TSP_wseed(Nc, info_instance, n_samples)
+                case "circle":
+                    eners = RandomSampler_Feasible_TSP_circle(Nc, n_samples)
                 case _:
                     raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
         case _:
@@ -90,8 +92,7 @@ def f_min_pfeas_triviality_feas(p_feas, p_violations, cumul_exp_feas, beta, E_LB
 
 ### Main function
 
-
-def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
+def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0):
     ''' version based on number of solution of a given violation family, rather than probabilities '''
     ## evaluate violation peaks and cumulatives
     match problem_type:
@@ -105,7 +106,7 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
             N, w = size
             n_viols = n_viols_exact_PO(N, w, peak_max)
 
-    cumul_exp_good, cumul_exp_tail = cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
+    cumul_exp_good, cumul_exp_tail = cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB)
 
     ## Ensure poly is correctly built
     # check if poly(1)>0
@@ -138,58 +139,6 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
     return M, min_pfeas
 
 
-def M_method_opt_probold(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0, circle_flag = False):
-    ''' version based on probabilities of random sampling a bitstring from a certain violation family, rather than number of bitstrings '''
-    ## evaluate violation peaks and cumulatives
-    match problem_type:
-        case "NPP":
-            N, P = size
-            n_viols = n_viols_exact_NPP(N, P, peak_max)
-            n_bits = N*P
-        case "TSP":
-            Nc = size
-            n_viols = n_viols_exact_TSP(Nc, peak_max)
-            n_bits = Nc**2
-        case "PO":
-            N, w = size
-            n_viols = n_viols_exact_PO(N, w, peak_max)
-            n_bits = N*w
-    p_viols = n_viols / np.longdouble(2)**n_bits
-
-    cumul_exp_good, cumul_exp_tail = cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB, circle_flag = circle_flag)
-    
-    ## Ensure poly is correctly built
-    # check if poly(1)>0
-    min_pfeas_triviality = f_min_pfeas_triviality(p_viols[0], p_viols[1:], cumul_exp_good, cumul_exp_tail, beta, E_LB)
-    if min_pfeas <= min_pfeas_triviality:
-        print(f"With tolerance {min_pfeas}, the sampling probability requirement is satisfied for any M. Setting M=0.")
-        return 0
-    # ensures poly(0)<0 and thus solution existence (decrease desidered probability if it is unattainable)
-    max_pfeas_existence = f_min_pfeas_existence(cumul_exp_good, cumul_exp_tail)
-    if min_pfeas >= max_pfeas_existence:
-        epsilon = 1e-2
-        if max_pfeas_existence < epsilon:
-            raise ValueError("Modified eta as \t\t[eta_new = eta_max - epsilon] is negative")
-        if np.isclose(max_pfeas_existence, 0):
-            raise ValueError(f"Maximum eta possible is too small, evaluates to {max_pfeas_existence}.\nYou should increase E_f to allow more random samples in [E_LB, E_f] to evaluate the integral. Atm E_LB = {E_LB} and E_f = {E_f}")
-        print(f"With tolerance {min_pfeas}, poly root doesn't exist. Feasibility tolerance decreased to {max_pfeas_existence - epsilon}")
-        min_pfeas = max_pfeas_existence - epsilon
-    
-    ## build and solve poly
-    p_feas_term = -(1/min_pfeas - 1) * cumul_exp_good  +  cumul_exp_tail
-    def func_M(M):
-        ''' Implements g function.  g(beta, M) =  \sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
-        M = np.float128(M)
-        exp_vec = np.array([ np.exp(-beta*(E_LB + M*j)) for j in np.arange(1, len(p_viols)) ], dtype = np.float128)
-        return np.dot(exp_vec.flatten(), p_viols[1:]) + np.float128(p_feas_term)*p_viols[0]
-    #print(f"Func_M(0) = {func_M(0)!s}\tFunc_M(1e9) = {func_M(1e9)!s}")
-    x0 = np.max((1, E_f))
-    print(f"Value of the g function at 1 and E_F, respectively: {func_M(1)}\t{func_M(E_f)}")
-    M = my_root_finder(func_M, x0)
-    #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
-    return M, min_pfeas
-
-
 
 
 
@@ -216,7 +165,7 @@ def build_numbs_set(N, P, seed):
     total = sum(numbs)
     return numbs
 
-def RandomSampler_Feasible_NPP_wnumbers(N, P, numbs, n_sample):
+def RandomSampler_Feasible_NPP_wnumbersset(N, P, numbs, n_sample):
     Es = np.ndarray((n_sample))
     for j in range(n_sample):
         assign = np.random.randint(P, size = N)
@@ -225,15 +174,15 @@ def RandomSampler_Feasible_NPP_wnumbers(N, P, numbs, n_sample):
     return Es
 
 
-def RandomSampler_Feasible_TSP_wseed(Nc, seed, n_sample, circle_flag):
-    adj = build_adjacency(Nc, seed, circle_flag)
+def RandomSampler_Feasible_TSP_wseed(Nc, seed, n_sample):
+    adj = build_adjacency(Nc, seed)
     Es = np.ndarray((n_sample))
     for j in range(n_sample):
         permu = np.random.permutation(np.arange(Nc))
         Es[j] = cost_permutation(permu, adj)
     return Es
 
-def build_adjacency(Nc, seed, circle_flag):
+def build_adjacency(Nc, seed, circle_flag = False):
     if circle_flag:
         # trivial construction of adj. matrix of graph with N cities on a circle. Modify this function to get more complex structures
         coordinates = [(1_000_000 * np.cos((index / Nc) * 2 * np.pi), 1_000_000 * np.sin((index / Nc) * 2 * np.pi)) for index in range(Nc)]
@@ -253,6 +202,14 @@ def cost_permutation(perm, adj):
     return cost
 
 def RandomSampler_Feasible_TSP_wadjacency(Nc, adj, n_sample):
+    Es = np.ndarray((n_sample))
+    for j in range(n_sample):
+        permu = np.random.permutation(np.arange(Nc))
+        Es[j] = cost_permutation(permu, adj)
+    return Es
+
+def RandomSampler_Feasible_TSP_circle(Nc, n_sample):
+    adj = build_adjacency(Nc, None, circle_flag = True)
     Es = np.ndarray((n_sample))
     for j in range(n_sample):
         permu = np.random.permutation(np.arange(Nc))
@@ -294,14 +251,14 @@ def my_root_finder(f, x0):
     return root
 
 
-def cumulatives_exp_integral(E_f, beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 10_000, n_samples = 10_000, circle_flag = False):
+def cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB = 0, n_chunks = 10_000, n_samples = 10_000):
     ''' Computes the exponential-cumulative until E_f (ie approximates the Gibbs integral) and the tail (ie 1 - cumulative)'''
     match problem_type:
         case "NPP":
             N, P = size
             match info_type: 
                 case "numbers":
-                    eners = RandomSampler_Feasible_NPP_wnumbers(N, P, np.array(info_instance), n_samples)
+                    eners = RandomSampler_Feasible_NPP_wnumbersset(N, P, np.array(info_instance), n_samples)
                 case "seed":
                     eners = RandomSampler_Feasible_NPP_wseed(N, P, info_instance, n_samples)
                 case _:
@@ -312,39 +269,32 @@ def cumulatives_exp_integral(E_f, beta, size,  info_instance, info_type, problem
                 case "adjacency":
                     eners = RandomSampler_Feasible_TSP_wadjacency(Nc, info_instance, n_samples)
                 case "seed":
-                    eners = RandomSampler_Feasible_TSP_wseed(Nc, info_instance, n_samples, circle_flag)
+                    eners = RandomSampler_Feasible_TSP_wseed(Nc, info_instance, n_samples)
+                case "circle":
+                    eners = RandomSampler_Feasible_TSP_circle(Nc, n_samples)
                 case _:
                     raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
         case _:
             raise ValueError(f"Problem type {problem_type} is not amomg the implemented ones")
 
     delta_avg = (np.max(eners) - E_LB) / (2*n_chunks)
+    
+    # distinguish case E_f \ge max(En)
+    if E_f > np.max(eners):
+        E_f = np.max(eners)
+        cumul_exp_tail = 0
+    else:
+        # calculate integral on tail
+        n_chunks_tail = np.ceil((np.max(eners) - E_f) / delta_avg)
+        delta_tail = (np.max(eners) - E_f) / n_chunks_tail
+        cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta_tail) ) * np.sum( np.logical_and(eners > E_f + j*delta_tail, eners <= E_f + (j+1)*delta_tail) ) / len(eners) for j in np.arange(n_chunks_tail) ])
 
+    # calculate integral on head
     n_chunks_head = np.ceil((E_f - E_LB) / delta_avg)
     delta_head = (E_f - E_LB) / n_chunks_head
     cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta_head) ) * np.sum( np.logical_and(eners > E_LB + j*delta_head, eners <= E_LB + (j+1)*delta_head) ) / len(eners) for j in np.arange(n_chunks_head) ])
-
-    n_chunks_tail = np.ceil((np.max(eners) - E_f) / delta_avg)
-    delta_tail = (E_f - E_LB) / n_chunks_head
-    cumul_exp_tail = np.sum([ np.exp(- np.float128(beta) * (E_f + j*delta_tail) ) * np.sum( np.logical_and(eners > E_f + j*delta_tail, eners <= E_f + (j+1)*delta_tail) ) / len(eners) for j in np.arange(n_chunks_tail) ])
-
     return cumul_exp_good, cumul_exp_tail
 
-# def cumulatives_exp_unique(E_f, beta, size, seed, problem_type, n_samples = 10_000, circle_flag = False):
-#     ''' Computes the feasible cumulative at E_f, multiplied by the exponential (loose approximation fo the Gibbs integral) and the tail (ie 1 - cumulative)'''
-#     raise NotImplementedError
-#     if problem_type == "NPP":
-#         N, P = size
-#         eners = RandomSampler_Feasible_NPP(N, P, seed, n_samples)
-#     elif problem_type == "TSP":
-#         Nc = size
-#         eners = RandomSampler_Feasible_TSP(Nc, seed, n_samples, circle_flag)
-
-#     crude_cumul = np.sum(eners <= E_f)/len(eners)
-#     if crude_cumul == 0:
-#         print("Empirical sampling cumulative at E_f evaluates to 0")
-#     cumul_tail = np.sum(eners > E_f)/len(eners)
-#     return crude_cumul*np.exp(-beta*E_f), cumul_tail
 
 
 def f_min_pfeas_triviality(p_feas, p_violations, cumul_exp_good, cumul_exp_tail, beta, E_LB):

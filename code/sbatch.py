@@ -1,23 +1,22 @@
 #!/usr/bin/env python3.8
 import os
 import time
-import numpy as np
 
 def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
     """Submits a Slurm job with specified parameters."""
-    time.sleep(1)
+    time.sleep(.3)
 
-    job_filename = f"send_job_{N_idx}_{vseed}_{M_strat}_{temp_scale}_{eta_req}.sh"
+    job_filename = f"send_job_{problem_type}_{N_idx}_{vseed}_{M_strat}_{temp_scale}_{eta_req}.sh"
     
     with open(job_filename, "w") as fh:
         fh.writelines("#!/bin/bash\n")
         fh.writelines("#\n")
-        fh.writelines(f"#SBATCH --job-name={N_idx}.{vseed}.{M_strat}.{temp_scale}.{eta_req}\n")
+        fh.writelines(f"#SBATCH --job-name={problem_type}.{N_idx}.{vseed}.{M_strat}.{temp_scale}.{eta_req}\n")
         fh.writelines("#SBATCH --nodes=1\n")
         fh.writelines("#SBATCH --ntasks-per-node=1\n")
         fh.writelines("#SBATCH --cpus-per-task=1\n")
-        fh.writelines("#SBATCH --time=48:00:00\n")
-        fh.writelines("#SBATCH --partition=long1,long2\n")
+        fh.writelines("#SBATCH --time=11:59:00\n")
+        fh.writelines("#SBATCH --partition=regular1,regular2\n") # long1,long2   or   regular1,regular2
         fh.writelines("#SBATCH --exclusive\n")
         fh.writelines("#SBATCH --mem=10000mb\n")
         fh.writelines("#SBATCH --output=%x.o\n")
@@ -29,16 +28,17 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
         # fh.writelines("#     module load gsl\n")
         fh.writelines("source ~/mambaforge/etc/profile.d/conda.sh\n")
         fh.writelines("conda activate qubo_project\n")
-        fh.writelines(f"python ~/hotBigM/code/SA_simulations.py {N_idx} {vseed} {M_strat} {temp_scale} {eta_req} \n")  # Pass parameters
+        fh.writelines(f"python ~/hotBigM/code/SA_simulations.py {problem_type} {N_idx} {vseed} {M_strat} {temp_scale} {eta_req} \n")  # Pass parameters
         fh.writelines("conda deactivate\n")
 
     os.system(f"sbatch {job_filename}")
     return 0
 
 # Iterate over parameters and submit jobs
-                                                                                                                        
-N_idxs= [6]  
-vseeds = range(42,46) # between 42 and 45
+
+problem_type = "TSP_case"                                                                                                                                                                                                                      
+N_idxs= [0,1,2,3,4,5] # till 9 on medium and from 10 on long 
+vseeds = range(42,43) # between 42 and 45
 M_strategies = ["feasibility", "optimality"]
 temperature_scalers = [1, 10, 100]
 etas_req = [.25, .5, .75]
