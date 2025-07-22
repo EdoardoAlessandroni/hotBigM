@@ -1,0 +1,44 @@
+from dadk.BinPol import *
+
+def gr21() -> BinPol:
+    data = {}
+    data[0] = [0]
+    data[1] = [510, 0]
+    data[2] = [635, 355, 0]
+    data[3] = [91, 415, 605, 0]
+    data[4] = [385, 585, 390, 350, 0]
+    data[5] = [155, 475, 495, 120, 240, 0]
+    data[6] = [110, 480, 570, 78, 320, 96, 0]
+    data[7] = [130, 500, 540, 97, 285, 36, 29, 0]
+    data[8] = [490, 605, 295, 460, 120, 350, 425, 390, 0]
+    data[9] = [370, 320, 700, 280, 590, 365, 350, 370, 625, 0]
+    data[10] = [155, 380, 640, 63, 430, 200, 160, 175, 535, 240, 0]
+    data[11] = [68, 440, 575, 27, 320, 91, 48, 67, 430, 300, 90, 0]
+    data[12] = [610, 360, 705, 520, 835, 605, 590, 610, 865, 250, 480, 545, 0]
+    data[13] = [655, 235, 585, 555, 750, 615, 625, 645, 775, 285, 515, 585, 190, 0]
+    data[14] = [480, 81, 435, 380, 575, 440, 455, 465, 600, 245, 345, 415, 295, 170, 0]
+    data[15] = [265, 480, 420, 235, 125, 125, 200, 165, 230, 475, 310, 205, 715, 650, 475, 0]
+    data[16] = [255, 440, 755, 235, 650, 370, 320, 350, 680, 150, 175, 265, 400, 435, 385, 485, 0]
+    data[17] = [450, 270, 625, 345, 660, 430, 420, 440, 690, 77, 310, 380, 180, 215, 190, 545, 225, 0]
+    data[18] = [170, 445, 750, 160, 495, 265, 220, 240, 600, 235, 125, 170, 485, 525, 405, 375, 87, 315, 0]
+    data[19] = [240, 290, 590, 140, 480, 255, 205, 220, 515, 150, 100, 170, 390, 425, 255, 395, 205, 220, 155, 0]
+    data[20] = [380, 140, 495, 280, 480, 340, 350, 370, 505, 185, 240, 310, 345, 280, 105, 380, 280, 165, 305, 150, 0]
+
+    N = len(data)
+
+    distances = [[data[max(city_a, city_b)][min(city_a, city_b)] for city_b in range(N)] for city_a in range(N)]
+
+    var_shape_set = VarShapeSet(BitArrayShape('x', (N, N), axis_names=['Time', 'City']))
+
+    penalty = BinPol(var_shape_set)
+    for t in range(N):
+        penalty += (1 - BinPol.sum(Term(1, (('x', t, c),), var_shape_set) for c in range(N))) ** 2
+    for c in range(N):
+        penalty += (1 - BinPol.sum(Term(1, (('x', t, c),), var_shape_set) for t in range(N))) ** 2
+
+    objective = BinPol(var_shape_set)
+    for t in range(N):
+        objective += BinPol.sum(Term(distances[c_0][c_1], (('x', t, c_0), ('x', (t + 1) % N, c_1),), var_shape_set)
+                                for c_0 in range(N) for c_1 in range(N) if c_0 != c_1)
+
+    return os.path.basename(__file__).replace('.py', ''), N, objective, penalty

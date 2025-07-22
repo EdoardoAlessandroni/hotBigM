@@ -1,0 +1,32 @@
+Soonish:
+- Perfect Gibbs Sampler: test and plots
+- Correct paper's comments
+- Collect results and plots:
+    - log(M^*/M_l1) for dichotomic
+    - \eta_eff/eta_req for different betas
+    - n_pen(v) forall benchmarks (analytical function)
+    - M^*(v_max) (No sampler, only MyAlgo)
+    - M^*(E_f) (No sampler, only MyAlgo)
+- SA tests 
+    - TSP mainly
+        - single easy instance (temperatures from DA)
+        - whole database for eta_req, temp_scaler, M_strategy etc.
+        - hard instances
+    - MNPP: dichotomic search comparison. (try different betas?)
+- TSP get non trivial instances (we can set E_LB = N_c * min_{i,j} e_{ij} which is better than E_LB = 0)
+- Portfolio Optimization application:
+    - implement feasible uniform sampling
+    - SDP relaxation to get E_LB
+    - Test it
+- Check T_eff technique and feasibility of DWave experiment
+- Sampling guarantee with approximations and relative errors
+
+
+Later than sooner:
+- Check MNPP hardness
+- TSP add the constraint \sum_{ (i,j) \nin E } \sum_t x_{i,t} x_{j,t+1} = 0
+- Implement M_method(H_obj, H_pen) rather than M_method(seed). But why should I do it?
+
+
+Comments:
+- old error in notebook: beta = 10^-8, E_f = 3*10^5, \eta_eff < eta_req = 0.5 for NPP (Gibbs? N_idx?). Answer: probably a regime (e.g. beta too large) for which the approximations (in particular the v_max \to v_cut approximation) are not valid anymore.
