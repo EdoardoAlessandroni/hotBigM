@@ -327,13 +327,12 @@ def run_instance(problem_type, N_idx, vseed, M_strategy, eta_required, DAtemp_sc
     data["vseed_"+str(vseed)]["E_f"] = E_f
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)] = {}
     temps = copy_DA_temperatures(problem_type, N_idx, vseed) * DAtemp_scaler
-    print("Computed temperatures are ", temps)
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)]["temp_initial"] = temps[0]
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)]["temp_final"] = temps[1]
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy] = {}
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy]["eta_req_"+str(eta_required)] = {}
     dict_run = data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy]["eta_req_"+str(eta_required)] 
-    run_SA(dict_run, problem_type, N_idx, vseed, temps, M_strategy, eta_required)
+    run_SA(dict_run, problem_type, N_idx, vseed, temps, M_strategy, eta_required, SA_samples = 300)
     return data
 
 
