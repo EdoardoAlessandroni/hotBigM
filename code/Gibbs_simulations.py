@@ -5,6 +5,10 @@ import os
 import pickle
 import sys
 from timeit import default_timer as timer
+from qiskit_optimization.translators import from_docplex_mp
+from docplex.mp.model_reader import ModelReader
+import cvxpy as cp
+
 
 
 ### useful functions
@@ -126,6 +130,69 @@ def get_QUBO_TSP(Nc, M, info_instance, info_type, objective = True, penalization
     return Q, const
 
 
+# PO specific
+
+def lower_bound_obj_PO(N, w, info_instance):
+    n_bits = N*w
+    directory, vseed = info_instance
+    filename = f"../data/{directory}/{n_bits}/random{vseed}_{n_bits}.lp"
+    m = ModelReader.read(filename, ignore_names=True)
+    qp = from_docplex_mp(m)
+    n = qp.get_num_binary_vars()
+    obj = qp.objective
+    Q = obj.quadratic.to_array()
+    L = obj.linear.to_array()
+
+    Q_tilde = np.ndarray((n+1, n+1))
+    Q_tilde[1:, 1:] = Q
+    Q_tilde[0, 0] = 0
+    Q_tilde[0, 1:] = .5*L.T
+    Q_tilde[1:, 0] = .5*L
+    X = cp.Variable((n+1, n+1), symmetric=True)
+    constraints = [X >> 0]
+    constraints += [X[i,i] == X[0,i] for i in range(1, n+1) ]
+    constraints += [X[0,0] == 1]      ###### alternative way of imposing boundness, rather than  0 <= X_ij <= 1  for all i,j (2 previous lines)
+    prob = cp.Problem(cp.Minimize(cp.trace(Q_tilde @ X)), constraints)
+    prob.solve(solver = "MOSEK")
+    return prob.value
+
+def build_pen_PO(N, w):
+    ''' return quadratic part and constant part of the penalization part of the hamiltonian '''
+    # constraints in the formulation      Ax = b 
+    A = np.array( [2**i for i in range(w-1, -1, -1)]*N )
+    b = 2**w - 1
+    # build [H, const] from [A, b]. easier formulation since b is scalar and A only 1 row, since there's only 1 constraint.
+    H = np.outer(A, A)
+    H -= 2*b*np.diag(A)
+    const = b**2
+    return H, const
+
+def get_PO_obj(n_bits, info_instance):
+    directory, vseed = info_instance
+    filename = f"../data/{directory}/{n_bits}/random{vseed}_{n_bits}.lp"
+    m = ModelReader.read(filename, ignore_names=True)
+    qp = from_docplex_mp(m)
+    obj = qp.objective
+    Q = obj.quadratic.to_array()
+    L = obj.linear.to_array()
+    return Q, L
+
+def get_QUBO_PO(N, w, M, info_type, info_instance, objective = True, penalization=True):
+    ''' build a PO QUBO with N stocks, w qubits per stock, M penalty factor, for problem identified with seed '''
+    Q, const = np.zeros(((N*w), (N*w))), 0
+    if objective:
+        if info_type == "seed":
+            Q_o, L_o = get_PO_obj(N*w, info_instance)
+            Q += Q_o + np.diag(L_o)
+        else:
+            raise ValueError(f"info_type = {info_type} not understood for PO instance")
+    if penalization:
+        Hp, const_p = build_pen_PO(N, w)
+        Q += M*Hp
+        const += M*const_p
+    return Q, const
+
+
 ### Gibbs sampling
 
 
@@ -185,9 +252,12 @@ def select_Ef(problem_type, N_idx):
     elif problem_type == "TSP_rand":
         n_bits = N_city_rand[N_idx]**2
         return 3e5 * n_bits**2
+    elif problem_type == "PO":
+        n_bits = N_stocks[N_idx] * w
+        return 3e5 * n_bits**2
 
 
-def run_Gibbs(dict_run, problem_type, N_idx, vseed, temperature, Mstrategy, eta_required, Gibbs_samples = 128, print_time = True):
+def run_Gibbs(dict_run, problem_type, N_idx, info_instance, temperature, Mstrategy, eta_required, Gibbs_samples = 128, print_time = True):
     """ Run an instance, first using our M algo to compute M^* and then sampling with SA the resulting QUBO.
      Fixed are the instance (seed and size), the Mstrategy and relative probablity required (eta) and the temperature schedule for SA, which copies DA's, scaled by a factor """
     t1 = timer()
@@ -197,9 +267,8 @@ def run_Gibbs(dict_run, problem_type, N_idx, vseed, temperature, Mstrategy, eta_
         N = Ns[N_idx]
         size = (N, P)
         n_bits = N * P
-        Q_pen, const_pen = get_QUBO_NPP(N, P, 1, vseed, penalization=True, objective=False)
-        Q_obj, const_obj = get_QUBO_NPP(N, P, 1, vseed, penalization=False, objective=True)
-        info_instance = vseed
+        Q_pen, const_pen = get_QUBO_NPP(N, P, 1, info_instance, penalization=True, objective=False)
+        Q_obj, const_obj = get_QUBO_NPP(N, P, 1, info_instance, penalization=False, objective=True)
         info_type = "seed"
         problem_type_Mfunc = "NPP"
     elif problem_type == "TSP_circle":
@@ -215,11 +284,18 @@ def run_Gibbs(dict_run, problem_type, N_idx, vseed, temperature, Mstrategy, eta_
         Nc = N_city_rand[N_idx]
         size = (Nc)
         n_bits = Nc**2
-        info_instance = vseed
         info_type = "seed"
         Q_pen, const_pen = get_QUBO_TSP(Nc, 1, None, None, penalization=True, objective=False)
         Q_obj, const_obj = get_QUBO_TSP(Nc, 1, info_instance, info_type, penalization=False, objective=True)
         problem_type_Mfunc = "TSP"
+    elif problem_type == "PO":
+        N = N_stocks[N_idx]
+        size = (N, w)
+        n_bits = N*w
+        info_type = "seed"
+        Q_pen, const_pen = get_QUBO_PO(N, w, 1, info_type, info_instance, penalization=True, objective=False)
+        Q_obj, const_obj = get_QUBO_PO(N, w, 1, info_type, info_instance, penalization=False, objective=True)
+        problem_type_Mfunc = "PO"
     else:
         raise ValueError("What problem are we solving?")
 
@@ -228,7 +304,9 @@ def run_Gibbs(dict_run, problem_type, N_idx, vseed, temperature, Mstrategy, eta_
     beta = 1 / temperature
     min_pfeas = eta_required  # eta
     peak_max = 4
-    if problem_type == "NPP" or problem_type == "TSP_circle" or problem_type == "TSP_rand":
+    if problem_type == "PO":
+        E_LB = lower_bound_obj_PO(N, w, info_instance)
+    else:
         E_LB = 0
     if Mstrategy == "optimality":
         E_f = select_Ef(problem_type, N_idx)
@@ -239,9 +317,11 @@ def run_Gibbs(dict_run, problem_type, N_idx, vseed, temperature, Mstrategy, eta_
 
     ### 3. Run Gibbs sampler on QUBO(M^*) and collect samples
     if problem_type == "NPP":
-        Q, const = get_QUBO_NPP(N, P, M_star, vseed)
+        Q, const = get_QUBO_NPP(N, P, M_star, info_instance)
     elif problem_type[:3] == "TSP":
         Q, const = get_QUBO_TSP(Nc, M_star, info_instance, info_type)
+    elif problem_type == "PO":
+        Q, const = get_QUBO_PO(N, w, M_star, info_type, info_instance)
     else:
         raise ValueError("What problem are we solving?")
 
@@ -266,16 +346,20 @@ def run_Gibbs(dict_run, problem_type, N_idx, vseed, temperature, Mstrategy, eta_
     dict_run["M_star"] = M_star
     dict_run["M_L1"] = M_L1
 
-    print(f"Recommended M for strategy: {Mstrategy} is \t {M_star}")
+    #print(f"Recommended M for strategy: {Mstrategy} is \t {M_star}")
     print(f"Etas: req = {np.round(eta_required, 3)} \t gua = {np.round(eta_guaranteed, 3)} \t eff = {np.round(eta_eff, 3)}")
 
     t2 = timer()
-    if print_time:
-        print(f"One instance with size N_idx = {N_idx} of {problem_type} took {t2 - t1:.4f}s")
+    # if print_time:
+    #     print(f"One instance with size N_idx = {N_idx} of {problem_type} took {t2 - t1:.4f}s\n")
     return 
 
 
-def run_instance(problem_type, N_idx, vseed, M_strategy, eta_required, temp_scaler):
+def run_instance(problem_type, N_idx, info_instance, M_strategy, eta_required, temp_scaler):
+    if problem_type == "PO":
+        vseed = info_instance[1]
+    else:
+        vseed = info_instance
     data = {}
     data["vseed_"+str(vseed)] = {}
     E_f = select_Ef(problem_type, N_idx)
@@ -286,7 +370,7 @@ def run_instance(problem_type, N_idx, vseed, M_strategy, eta_required, temp_scal
     data["vseed_"+str(vseed)]["Tscale_"+str(temp_scaler)][M_strategy] = {}
     data["vseed_"+str(vseed)]["Tscale_"+str(temp_scaler)][M_strategy]["eta_req_"+str(eta_required)] = {}
     dict_run = data["vseed_"+str(vseed)]["Tscale_"+str(temp_scaler)][M_strategy]["eta_req_"+str(eta_required)] 
-    run_Gibbs(dict_run, problem_type, N_idx, vseed, temp, M_strategy, eta_required, Gibbs_samples = 1000)
+    run_Gibbs(dict_run, problem_type, N_idx, info_instance, temp, M_strategy, eta_required, Gibbs_samples = 1000)
     return data
 
 
@@ -297,6 +381,9 @@ Ns = np.arange(3, 9)
 P = 3
 N_city_circle = np.arange(2, 6)
 N_city_rand = np.arange(2, 6)
+N_stocks = np.arange(2, 9)
+w = 3
+directory = "PO_small"
 
 try:
     problem_type = sys.argv[1]
@@ -306,25 +393,25 @@ try:
     temperature_scaler = int(sys.argv[5])
     eta_req = float(sys.argv[6])
 except (IndexError, ValueError):
-    print("Wrong usage of code. Correct usage:\npython SA_simulations.py problem_model(TSP/NPP) size_index vseed M_strategy(opt/feas) DA_temperature_scaler eta_required")
+    print("Wrong usage of code. Correct usage:\npython Gibbs_simulations.py problem_model(TSP/NPP/PO) size_index vseed M_strategy(opt/feas) temperature_scaler eta_required")
     sys.exit(1)
     
-
+info_instance = vseed
 if problem_type == "NPP":
     filename = f"../data/Gibbs_NPP/results-N={Ns[N_idx]}_P={P}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
 elif problem_type == "TSP_circle":
     filename = f"../data/Gibbs_TSP_circle/results-Nc={N_city_circle[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
 elif problem_type == "TSP_rand":
     filename = f"../data/Gibbs_TSP_rand/results-Nc={N_city_rand[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
+elif problem_type == "PO":
+    filename = f"../data/Gibbs_PO/results-N={N_stocks[N_idx]}_w={w}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
+    info_instance = (directory,  vseed)
 print(filename)
 if os.path.exists(filename):
     raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
 
-data = run_instance(problem_type, N_idx, vseed, M_strategy, eta_req, temperature_scaler)
+data = run_instance(problem_type, N_idx, info_instance, M_strategy, eta_req, temperature_scaler)
 
 # file = open(filename, "wb")
 # pickle.dump(data, file)
 # file.close()
-
-
-# TODO How many instances to analyze?

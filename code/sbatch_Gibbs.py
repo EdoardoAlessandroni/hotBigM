@@ -28,7 +28,7 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
         # fh.writelines("#     module load gsl\n")
         fh.writelines("source ~/mambaforge/etc/profile.d/conda.sh\n")
         fh.writelines("conda activate qubo_project\n")
-        fh.writelines(f"python ~/hotBigM/code/SA_simulations.py {problem_type} {N_idx} {vseed} {M_strat} {temp_scale} {eta_req} \n")  # Pass parameters
+        fh.writelines(f"python ~/hotBigM/code/Gibbs_simulations.py {problem_type} {N_idx} {vseed} {M_strat} {temp_scale} {eta_req} \n")  # Pass parameters
         fh.writelines("conda deactivate\n")
 
     os.system(f"sbatch {job_filename}")

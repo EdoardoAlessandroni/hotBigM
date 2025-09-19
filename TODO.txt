@@ -1,25 +1,25 @@
 Soonish:
-- Perfect Gibbs Sampler: test and plots
 - Correct paper's comments
+- E_max by taking the maximal sampled one, is it fair?
 - Collect results and plots:
     - log(M^*/M_l1) for dichotomic
     - \eta_eff/eta_req for different betas
     - n_pen(v) forall benchmarks (analytical function)
     - M^*(v_max) (No sampler, only MyAlgo)
     - M^*(E_f) (No sampler, only MyAlgo)
-- SA tests 
-    - TSP mainly
-        - single easy instance (temperatures from DA)
-        - whole database for eta_req, temp_scaler, M_strategy etc.
-        - hard instances
-    - MNPP: dichotomic search comparison. (try different betas?)
-- TSP get non trivial instances (we can set E_LB = N_c * min_{i,j} e_{ij} which is better than E_LB = 0)
 - Portfolio Optimization application:
     - implement feasible uniform sampling
     - SDP relaxation to get E_LB
     - Test it
 - Check T_eff technique and feasibility of DWave experiment
 - Sampling guarantee with approximations and relative errors
+- Add to the paper the feasibility M_strategy
+- Add to the paper the M_L1(\beta) formula and proof
+- Add to the paper the discussion on the  relation to the thermal populatiokn at the end of a quantum annealing
+- Add to the paper that, for the feasibility M_strategy at least (check if it holds for the optimality as well), you can work out rescaled LCBO by rescaling temperatures as well.
+    - say we want to solve for the LCBO with objective \tilde Q = \alpha Q
+    - run our algo for the unscaled algorithm with temperature fixed to \beta = \beta_solver * \alpha, get M_unscaled
+    - M for the scaled \tilde LCBO will then be M = M_unscaled * \alpha, sufficient for solving the problem with a solver at \beta = \beta_solver
 
 
 Later than sooner:

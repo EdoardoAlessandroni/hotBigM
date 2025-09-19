@@ -2,12 +2,14 @@ import numpy as np
 from scipy.special import factorial, comb
 import random
 from timeit import default_timer as timer
+from qiskit_optimization.translators import from_docplex_mp
+from docplex.mp.model_reader import ModelReader
 
 
 
 ######### Feasibility strategy
 
-def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_LB = 0):
+def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_LB):
     ## evaluate violation peaks and cumulatives
     match problem_type:
         case "NPP":
@@ -19,7 +21,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
         case "PO":
             N, w = size
             n_viols = n_viols_exact_PO(N, w, peak_max)
-
+    
     cumul_exp_feas = cumulative_exp_integral_feas(beta, size, info_instance, info_type, problem_type, E_LB)
     
     ## Ensure poly is correctly built
@@ -32,7 +34,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     ## build and solve poly
     p_feas_term = -(1/min_pfeas - 1) * cumul_exp_feas * n_viols[0]
     def func_M(M):
-        ''' Implements g function.  g(beta, M) =  \sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
+        ''' Implements g function.  g(beta, M) =  sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
         M = np.float128(M)
         exp_vec = np.array([ np.exp(-beta*(E_LB + M*j)) for j in np.arange(1, len(n_viols)) ], dtype = np.float128)
         return np.dot(exp_vec.flatten(), n_viols[1:]) + np.float128(p_feas_term)
@@ -40,11 +42,11 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     x0 = 1
     M = my_root_finder(func_M, x0)
     #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required feasible probability in at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
-    
+    M = np.float64(M)
     return M, min_pfeas
 
 
-def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB = 0, n_chunks = 20_000, n_samples = 10_000):
+def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_type, E_LB, n_chunks = 20_000, n_samples = 10_000):
     ''' Computes the exponential-cumulative until E_f (ie approximates the Gibbs integral) and the tail (ie 1 - cumulative)'''
     match problem_type:
         case "NPP":
@@ -67,9 +69,15 @@ def cumulative_exp_integral_feas(beta, size,  info_instance, info_type, problem_
                     eners = RandomSampler_Feasible_TSP_circle(Nc, n_samples)
                 case _:
                     raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
+        case "PO":
+            N, w = size
+            if info_type == "seed":
+                eners = RandomSampler_Feasible_PO_wseed(N, w, info_instance, n_samples)
+            else:
+                raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
         case _:
             raise ValueError(f"Problem type {problem_type} is not amomg the implemented ones")
-            
+
     delta = (np.max(eners) - E_LB) / n_chunks
     cumul_exp_feas = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta) ) * np.sum( np.logical_and(eners > E_LB + j*delta, eners <= E_LB + (j+1)*delta) ) / len(eners) for j in np.arange(n_chunks) ])
     return cumul_exp_feas
@@ -92,7 +100,7 @@ def f_min_pfeas_triviality_feas(p_feas, p_violations, cumul_exp_feas, beta, E_LB
 
 ### Main function
 
-def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB = 0):
+def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB):
     ''' version based on number of solution of a given violation family, rather than probabilities '''
     ## evaluate violation peaks and cumulatives
     match problem_type:
@@ -128,7 +136,7 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
     ## build and solve poly
     p_feas_term = n_viols[0] * (-(1/min_pfeas - 1) * cumul_exp_good  +  cumul_exp_tail)
     def func_M(M):
-        ''' Implements g function.  g(beta, M) =  \sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
+        ''' Implements g function.  g(beta, M) =  sum_v [ exp(-beta*(E_LB + Mv)) * p_pen(v) ]  +  p_pen(0)*[ exp(-beta*E_f)*(1 - cumul(E_f)) - (1-eta)/eta * cumul_exp_Ef ] '''
         M = np.float128(M)
         exp_vec = np.array([ np.exp(-beta*(E_LB + M*j)) for j in np.arange(1, len(n_viols)) ], dtype = np.float128)
         return np.dot(exp_vec.flatten(), n_viols[1:]) + np.float128(p_feas_term)
@@ -136,6 +144,7 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
     x0 = np.max((1, E_f))
     M = my_root_finder(func_M, x0)
     #print(f"For this instance, sampling temperature = {np.format_float_scientific(1/beta, 3)} and required probability in [0, E_f = {E_f}] at least {np.round(min_pfeas, 3)}, the chosen M is {np.format_float_scientific(M, 2)} (last violation peak used is {peak_max})")
+    M = np.float64(M)
     return M, min_pfeas
 
 
@@ -144,6 +153,7 @@ def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, m
 
 ### Random feasible Sampler functions
 
+## NPP
 
 def RandomSampler_Feasible_NPP_wseed(N, P, seed, n_sample):
     numbs = np.array(build_numbs_set(N, P, seed))
@@ -173,6 +183,7 @@ def RandomSampler_Feasible_NPP_wnumbersset(N, P, numbs, n_sample):
         Es[j] = P*np.var(subset_sums) # NB the objective energy can be reformulated as the variance of the subsets' sums (scaled by P)
     return Es
 
+## TSP
 
 def RandomSampler_Feasible_TSP_wseed(Nc, seed, n_sample):
     adj = build_adjacency(Nc, seed)
@@ -216,6 +227,47 @@ def RandomSampler_Feasible_TSP_circle(Nc, n_sample):
         Es[j] = cost_permutation(permu, adj)
     return Es
 
+## PO
+
+def get_PO_obj(n_bits, info_instance):
+    directory, vseed = info_instance
+    filename = f"../data/{directory}/{n_bits}/random{vseed}_{n_bits}.lp"
+    m = ModelReader.read(filename, ignore_names=True)
+    qp = from_docplex_mp(m)
+    obj = qp.objective
+    Q = obj.quadratic.to_array()
+    L = obj.linear.to_array()
+    return Q, L
+
+def random_portfolio_bin(N, w, n_samples):
+    ''' Uniformly sample feasible portfolios using the stars and bars method'''
+    if N == 1:
+        return np.ones((w, n_samples))
+    M = 2**w-1 + N - 1 # number of objects in the stars and bars method
+    ports = np.empty((n_samples, N), dtype=int)
+    for i in range(n_samples):
+        divs = np.sort(np.random.choice(M, size=N-1, replace=False))
+        prev = -1
+        counts = []
+        for d in divs:
+            counts.append(d - prev - 1)
+            prev = d
+        counts.append(M - 1 - prev)
+        ports[i] = counts
+    port_bin = np.array([[[int(bit) for bit in format(stock, f'0{w}b')] for stock in port] for port in ports])
+    port_bin = np.reshape(port_bin, (n_samples, N*w))
+    return port_bin
+
+def RandomSampler_Feasible_PO_wseed(N, w, info_instance, n_sample):
+    Q, L = get_PO_obj(N*w, info_instance)
+    Q += np.diag(L)
+    Es = np.ndarray((n_sample))
+    ports = random_portfolio_bin(N, w, n_sample)
+    for j in range(n_sample):
+        x = ports[j]
+        Es[j] = np.dot(x, np.dot(Q, x))
+    return Es
+
 
 ### Auxiliary functions
 
@@ -229,7 +281,9 @@ def my_root_finder(f, x0):
     if f(x) < 0:
         interval = [0, x]
     else:
-        while f(x) > 0:
+        while f(x) >= 0:
+            if f(x) == 0:
+                return x
             n_iter += 1
             x_old = x
             x = 10*x
@@ -251,7 +305,7 @@ def my_root_finder(f, x0):
     return root
 
 
-def cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB = 0, n_chunks = 10_000, n_samples = 10_000):
+def cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_type, E_LB, n_chunks = 10_000, n_samples = 10_000):
     ''' Computes the exponential-cumulative until E_f (ie approximates the Gibbs integral) and the tail (ie 1 - cumulative)'''
     match problem_type:
         case "NPP":
@@ -274,14 +328,20 @@ def cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_
                     eners = RandomSampler_Feasible_TSP_circle(Nc, n_samples)
                 case _:
                     raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
+        case "PO":
+            N, w = size
+            if info_type == "seed":
+                eners = RandomSampler_Feasible_PO_wseed(N, w, info_instance, n_samples)
+            else:
+                raise ValueError(f"Info type {info_type} is not amomg the implemented ones")
         case _:
             raise ValueError(f"Problem type {problem_type} is not amomg the implemented ones")
 
-    delta_avg = (np.max(eners) - E_LB) / (2*n_chunks)
+    delta_avg = (np.max(eners) - E_LB) / (2*n_chunks) # this is needed to set the number of integration steps for tail and head, so that they're integers, all edge cases are taken care of and \delta should be similiar in head and tail 
     
     # distinguish case E_f \ge max(En)
     if E_f > np.max(eners):
-        E_f = np.max(eners)
+        E_f = np.max(eners) + 1e-3 # adding + 1e-3 is useful to avoid rounding errors in the last interval counting [E_f - delta_dead, E_f]
         cumul_exp_tail = 0
     else:
         # calculate integral on tail
@@ -293,6 +353,7 @@ def cumulatives_exp_integral(E_f, beta, size, info_instance, info_type, problem_
     n_chunks_head = np.ceil((E_f - E_LB) / delta_avg)
     delta_head = (E_f - E_LB) / n_chunks_head
     cumul_exp_good = np.sum([ np.exp(- np.float128(beta) * (E_LB + (j+1)*delta_head) ) * np.sum( np.logical_and(eners > E_LB + j*delta_head, eners <= E_LB + (j+1)*delta_head) ) / len(eners) for j in np.arange(n_chunks_head) ])
+
     return cumul_exp_good, cumul_exp_tail
 
 

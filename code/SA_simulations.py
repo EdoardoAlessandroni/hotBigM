@@ -4,11 +4,8 @@ from myalgo import M_method_feas, M_method_opt
 import os
 import json
 import pickle
-from tqdm import tqdm
 import importlib.util
 import sys
-import time
-
 from simulated_annealing import simulated_annealing
 from timeit import default_timer as timer
 
@@ -327,6 +324,11 @@ def run_instance(problem_type, N_idx, vseed, M_strategy, eta_required, DAtemp_sc
     data["vseed_"+str(vseed)]["E_f"] = E_f
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)] = {}
     temps = copy_DA_temperatures(problem_type, N_idx, vseed) * DAtemp_scaler
+    if problem_type == "TSP_case":
+        Nc = N_city_case[N_idx]
+        adj = load_adjacency_usecases(cases_names[str(Nc)][0])
+        scaling_factor = 2_000_000 / np.max(np.abs(adj)) # scaling factory of DA runs. Since we copy DA temperatures for SA, we need to rescale the temperature accordingly
+        temps *= scaling_factor
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)]["temp_initial"] = temps[0]
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)]["temp_final"] = temps[1]
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy] = {}
@@ -374,6 +376,6 @@ if os.path.exists(filename):
 
 data = run_instance(problem_type, N_idx, vseed, M_strategy, eta_req, temperature_scaler)
 
-file = open(filename, "wb")
-pickle.dump(data, file)
-file.close()
+# file = open(filename, "wb")
+# pickle.dump(data, file)
+# file.close()

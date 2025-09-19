@@ -1,0 +1,4 @@
+Portfolio Optimization, Markowitz model. Data from S&P500 financial data. (NORMalized formulation, i.e. decision variables properly describe fractions). Big number of variables.
+range(10,51,10) + [75] + range(100, 401, 50)
+100 samples
+pars: (partition_numb) w=5, multiplier=1e4, risk aversion=1
