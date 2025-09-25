@@ -15,7 +15,7 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
         fh.writelines("#SBATCH --nodes=1\n")
         fh.writelines("#SBATCH --ntasks-per-node=1\n")
         fh.writelines("#SBATCH --cpus-per-task=1\n")
-        fh.writelines("#SBATCH --time=11:59:00\n")
+        fh.writelines("#SBATCH --time=01:59:00\n")
         fh.writelines("#SBATCH --partition=regular1,regular2\n") # long1,long2   or   regular1,regular2
         fh.writelines("#SBATCH --exclusive\n")
         fh.writelines("#SBATCH --mem=10000mb\n")
@@ -36,9 +36,9 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
 
 # Iterate over parameters and submit jobs
 
-problem_type = "NPP"                                                                                                                                                                                                                      
-N_idxs= [0,1,2,3,4,5] # for NPP [0,..,5], for TSP [0,1,2,3]
-vseeds = range(42,52) # between 42 and 51 for NPP and TSP_rand, only 42 for TSP_circle
+problem_type = "PO"                                                                                                                                                                                                                      
+N_idxs= [5, 6] # for NPP [0,..,5], for TSP [0,...,3], for PO [0,...,6]
+vseeds = range(42, 9943, 100) # between 42 and 142 for NPP and TSP_rand, between 42 and 9942 (with jumps of 100) for PO, only 42 for TSP_circle
 M_strategies = ["feasibility", "optimality"]
 temperature_scalers = [1, 10, 100]
 etas_req = [.25, .5, .75]

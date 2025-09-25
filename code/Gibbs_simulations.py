@@ -254,7 +254,7 @@ def select_Ef(problem_type, N_idx):
         return 3e5 * n_bits**2
     elif problem_type == "PO":
         n_bits = N_stocks[N_idx] * w
-        return 3e5 * n_bits**2
+        return 3e-2 * n_bits**2
 
 
 def run_Gibbs(dict_run, problem_type, N_idx, info_instance, temperature, Mstrategy, eta_required, Gibbs_samples = 128, print_time = True):
@@ -303,9 +303,10 @@ def run_Gibbs(dict_run, problem_type, N_idx, info_instance, temperature, Mstrate
     ### 2. From [LCBO, \beta] compute M^*, \eta_{guarantee} using our algorithm. Also, compute M_{\ell_1}
     beta = 1 / temperature
     min_pfeas = eta_required  # eta
-    peak_max = 4
+    peak_max = 4 # 4 for NPP and TSP, 9 for PO
     if problem_type == "PO":
         E_LB = lower_bound_obj_PO(N, w, info_instance)
+        peak_max = 25
     else:
         E_LB = 0
     if Mstrategy == "optimality":
@@ -335,9 +336,9 @@ def run_Gibbs(dict_run, problem_type, N_idx, info_instance, temperature, Mstrate
 
     ### 5. From [E_o, E_p] compute \eta_{effective}
     if Mstrategy == "feasibility":
-        eta_eff = np.sum(eners[:, 1] == 0) / len(states)
+        eta_eff = np.sum( np.isclose(eners[:, 1], 0)) / len(states)
     elif Mstrategy == "optimality":
-        eta_eff = np.sum(  np.logical_and(eners[:, 1] == 0, eners[:, 0] <= E_f)) / len(states)
+        eta_eff = np.sum( np.logical_and( np.isclose(eners[:, 1], 0) , eners[:, 0] <= E_f)) / len(states)
 
     # save data
     dict_run["eta_required"] = eta_required
@@ -370,7 +371,7 @@ def run_instance(problem_type, N_idx, info_instance, M_strategy, eta_required, t
     data["vseed_"+str(vseed)]["Tscale_"+str(temp_scaler)][M_strategy] = {}
     data["vseed_"+str(vseed)]["Tscale_"+str(temp_scaler)][M_strategy]["eta_req_"+str(eta_required)] = {}
     dict_run = data["vseed_"+str(vseed)]["Tscale_"+str(temp_scaler)][M_strategy]["eta_req_"+str(eta_required)] 
-    run_Gibbs(dict_run, problem_type, N_idx, info_instance, temp, M_strategy, eta_required, Gibbs_samples = 1000)
+    run_Gibbs(dict_run, problem_type, N_idx, info_instance, temp, M_strategy, eta_required, Gibbs_samples = n_Gibbs_samples) # Gibbs_samples = 1000 for NPP and TSP
     return data
 
 
@@ -384,6 +385,7 @@ N_city_rand = np.arange(2, 6)
 N_stocks = np.arange(2, 9)
 w = 3
 directory = "PO_small"
+n_Gibbs_samples = 1000
 
 try:
     problem_type = sys.argv[1]
@@ -406,12 +408,13 @@ elif problem_type == "TSP_rand":
 elif problem_type == "PO":
     filename = f"../data/Gibbs_PO/results-N={N_stocks[N_idx]}_w={w}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
     info_instance = (directory,  vseed)
+    n_Gibbs_samples = 100_000
 print(filename)
 if os.path.exists(filename):
     raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
 
 data = run_instance(problem_type, N_idx, info_instance, M_strategy, eta_req, temperature_scaler)
 
-# file = open(filename, "wb")
-# pickle.dump(data, file)
-# file.close()
+file = open(filename, "wb")
+pickle.dump(data, file)
+file.close()
