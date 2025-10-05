@@ -1,6 +1,5 @@
 Soonish:
 - Correct paper's comments
-- E_max by taking the maximal sampled one, is it fair?
 - Collect results and plots:
     - log(M^*/M_l1) for dichotomic
     - \eta_eff/eta_req for different betas
@@ -8,14 +7,15 @@ Soonish:
     - M^*(v_max) (No sampler, only MyAlgo)
     - M^*(E_f) (No sampler, only MyAlgo)
 - Portfolio Optimization application:
-    - implement feasible uniform sampling
     - SDP relaxation to get E_LB
     - Test it
 - Check T_eff technique and feasibility of DWave experiment
-- Sampling guarantee with approximations and relative errors
+- Add to the paper the sampling guarantee with approximations and relative errors
 - Add to the paper the feasibility M_strategy
 - Add to the paper the M_L1(\beta) formula and proof
-- Add to the paper the discussion on the  relation to the thermal populatiokn at the end of a quantum annealing
+- Add to the paper the discussion on the  relation to the thermal population at the end of a quantum annealing
+- Add to the paper the discussion on the triviality and existence of the solution
+- Add to the paper the numerically stable version in log space
 - Add to the paper that, for the feasibility M_strategy at least (check if it holds for the optimality as well), you can work out rescaled LCBO by rescaling temperatures as well.
     - say we want to solve for the LCBO with objective \tilde Q = \alpha Q
     - run our algo for the unscaled algorithm with temperature fixed to \beta = \beta_solver * \alpha, get M_unscaled
@@ -25,7 +25,6 @@ Soonish:
 Later than sooner:
 - Check MNPP hardness
 - TSP add the constraint \sum_{ (i,j) \nin E } \sum_t x_{i,t} x_{j,t+1} = 0
-- Implement M_method(H_obj, H_pen) rather than M_method(seed). But why should I do it?
 
 
 Comments:

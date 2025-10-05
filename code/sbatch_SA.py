@@ -36,9 +36,9 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
 
 # Iterate over parameters and submit jobs
 
-problem_type = "TSP_case"                                                                                                                                                                                                                      
-N_idxs= [0,1,2,3,4] # till 9 on medium and from 10 on long 
-vseeds = range(42,43) # between 42 and 45
+problem_type = "PO"
+N_idxs= [0,1,2,3,4] # for NPP [0,..,5], for TSP [0,...,3], for PO [0,...,10]
+vseeds = range(42,43) # between 42 and 46 for NPP and TSP_rand, between 42 and 9942 (with jumps of 100) for PO, only 42 for TSP_circle
 M_strategies = ["feasibility", "optimality"]
 temperature_scalers = [1, 10, 100]
 etas_req = [.25, .5, .75]

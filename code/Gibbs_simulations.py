@@ -311,9 +311,9 @@ def run_Gibbs(dict_run, problem_type, N_idx, info_instance, temperature, Mstrate
         E_LB = 0
     if Mstrategy == "optimality":
         E_f = select_Ef(problem_type, N_idx)
-        M_star, eta_guaranteed = M_method_opt(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB)
+        M_star, eta_guaranteed = M_method_opt(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB, log_stable = True)
     elif Mstrategy == "feasibility":
-        M_star, eta_guaranteed = M_method_feas(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_LB)
+        M_star, eta_guaranteed = M_method_feas(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_LB, log_stable = True)
     M_L1 = L1_norm_hot(Q_obj, const_obj, n_bits, temperature, min_pfeas)
 
     ### 3. Run Gibbs sampler on QUBO(M^*) and collect samples
@@ -385,6 +385,13 @@ N_city_rand = np.arange(2, 6)
 N_stocks = np.arange(2, 9)
 w = 3
 directory = "PO_small"
+# next 3 lines are for debugging (refer to SA tests actually), remove for actual Gibbs runs
+N_stocks = np.array([2, 4, 6, 8, 10, 15, 20, 30, 40, 50, 60])
+w = 5
+directory = "PO_big"
+
+
+
 n_Gibbs_samples = 1000
 
 try:
@@ -415,6 +422,6 @@ if os.path.exists(filename):
 
 data = run_instance(problem_type, N_idx, info_instance, M_strategy, eta_req, temperature_scaler)
 
-file = open(filename, "wb")
-pickle.dump(data, file)
-file.close()
+# file = open(filename, "wb")
+# pickle.dump(data, file)
+# file.close()

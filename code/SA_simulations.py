@@ -6,10 +6,13 @@ import json
 import pickle
 import importlib.util
 import sys
-from simulated_annealing import simulated_annealing
+from simulated_annealing import simulated_annealing, deterministic_temperature
 from timeit import default_timer as timer
+from qiskit_optimization.translators import from_docplex_mp
+from docplex.mp.model_reader import ModelReader
+import cvxpy as cp
 
-# Note: the following code implements SA simulation flow for NPP only for now.
+# from schedule_imp import infer_temperature
 
 
 ### useful functions
@@ -151,6 +154,81 @@ def get_QUBO_TSP(Nc, M, info_instance, info_type, objective = True, penalization
     return Q, const
 
 
+# PO specific
+
+def infer_temperature(n_bits):
+    a, b = 1e5, 0.7 # 7e5, 0.72 -> old ones copied from NPP trend
+    ti = a/( np.log(n_bits) + b )
+    gamma = -2.6
+    alpha, delta = 1e3, .4 # 3e3, .4 -> old ones copied from NPP trend
+    tf = alpha*( 1 + gamma/(np.log(n_bits)+delta) )
+    return ti, tf
+
+
+def lower_bound_obj_PO(N, w, info_instance):
+    n_bits = N*w
+    directory, vseed = info_instance
+    filename = f"../data/{directory}/{n_bits}/random{vseed}_{n_bits}.lp"
+    m = ModelReader.read(filename, ignore_names=True)
+    qp = from_docplex_mp(m)
+    n = qp.get_num_binary_vars()
+    obj = qp.objective
+    Q = obj.quadratic.to_array()
+    L = obj.linear.to_array()
+
+    Q_tilde = np.ndarray((n+1, n+1))
+    Q_tilde[1:, 1:] = Q
+    Q_tilde[0, 0] = 0
+    Q_tilde[0, 1:] = .5*L.T
+    Q_tilde[1:, 0] = .5*L
+    X = cp.Variable((n+1, n+1), symmetric=True)
+    constraints = [X >> 0]
+    constraints += [X[i,i] == X[0,i] for i in range(1, n+1) ]
+    constraints += [X[0,0] == 1]      ###### alternative way of imposing boundness, rather than  0 <= X_ij <= 1  for all i,j
+    prob = cp.Problem(cp.Minimize(cp.trace(Q_tilde @ X)), constraints)
+    prob.solve(solver = "MOSEK")
+    return prob.value
+
+def build_pen_PO(N, w):
+    ''' return quadratic part and constant part of the penalization part of the hamiltonian '''
+    # constraints in the formulation      Ax = b 
+    A = np.array( [2**i for i in range(w-1, -1, -1)]*N )
+    b = 2**w - 1
+    # build [H, const] from [A, b]. easier formulation since b is scalar and A only 1 row, since there's only 1 constraint.
+    H = np.outer(A, A)
+    H -= 2*b*np.diag(A)
+    const = b**2
+    return H, const
+
+def get_PO_obj(n_bits, info_instance):
+    directory, vseed = info_instance
+    filename = f"../data/{directory}/{n_bits}/random{vseed}_{n_bits}.lp"
+    m = ModelReader.read(filename, ignore_names=True)
+    qp = from_docplex_mp(m)
+    obj = qp.objective
+    Q = obj.quadratic.to_array()
+    L = obj.linear.to_array()
+    return Q, L
+
+def get_QUBO_PO(N, w, M, info_type, info_instance, objective = True, penalization=True):
+    ''' build a PO QUBO with N stocks, w qubits per stock, M penalty factor, for problem identified with seed '''
+    Q, const = np.zeros(((N*w), (N*w))), 0
+    if objective:
+        if info_type == "seed":
+            Q_o, L_o = get_PO_obj(N*w, info_instance)
+            Q += Q_o + np.diag(L_o)
+        else:
+            raise ValueError(f"info_type = {info_type} not understood for PO instance")
+    if penalization:
+        Hp, const_p = build_pen_PO(N, w)
+        Q += M*Hp
+        const += M*const_p
+    return Q, const
+
+
+
+
+
 
 ### general
 
@@ -171,17 +249,27 @@ def evaluate_energy(solution, Q, const):
 
 
 def copy_DA_temperatures(problem_type, N_idx, vseed):
-    """ Copy the final and initial temperatures that DA solver used for the instance with seed = vseed, from the dataset iindicated in the directory """
+    """ Copy the final and initial temperatures that DA solver used for the instance with seed = vseed, from the dataset indicated in the directory """
     if problem_type == "NPP":
         N = Ns[N_idx]
         P = Ps[N_idx]
-        filename = f"../data/scan_NPP/results-N={N}_P={P}-short.json"
+        filename = f"../data/scan_DA_NPP/results-N={N}_P={P}-short.json"
     elif problem_type == "TSP_circle":
         Nc = N_city_circle[N_idx]
         filename = f"../data/scan_DA_TSP_circle/results-N={Nc}-short.json"
     elif problem_type == "TSP_case":
         Nc = N_city_case[N_idx]
         filename = f"../data/scan_DA_TSP_case/results-{cases_names[str(Nc)][0]}-short.json"
+    elif problem_type == "PO":
+        n_bits = w*N_stocks[N_idx]
+        # info_instance = (directory, vseed)
+        # Q, L = get_PO_obj(n_bits, info_instance)
+        # Q += np.diag(L) 
+        ti, tf = infer_temperature(n_bits)
+        #print("Temperatures:\t", np.round(ti), np.round(tf))
+        return np.array([ti, tf])
+    else:
+        raise ValueError("What problem are we solving?")
     if not os.path.isfile(filename):
         raise ValueError(f"{filename} doesn't exist")
 
@@ -197,6 +285,7 @@ def copy_DA_temperatures(problem_type, N_idx, vseed):
                     t_f.append(summary[M][seed]["temperature_end"])
             temp_i[M_idx] = np.mean(t_i)  # mean across the value and DA-initialization seeds
             temp_f[M_idx] = np.mean(t_f)
+    print("Temperatures:\t", np.array([np.mean(temp_i), np.mean(temp_f)]))
     return np.array([np.mean(temp_i), np.mean(temp_f)])  # mean across Ms
 
 
@@ -219,6 +308,11 @@ def select_Ef(problem_type, N_idx):
     elif problem_type == "TSP_case":
         n_bits = N_city_case[N_idx]**2
         return 3.5e-2 * n_bits**2
+    elif problem_type == "PO":
+        n_bits = w*N_stocks[N_idx]
+        return 3e-2 * n_bits**2
+    else:
+        raise ValueError("What problem are we solving?")
 
 
 def run_SA(dict_run, problem_type, N_idx, vseed, temperatures, Mstrategy, eta_required, SA_samples = 128, print_time = True):
@@ -255,6 +349,15 @@ def run_SA(dict_run, problem_type, N_idx, vseed, temperatures, Mstrategy, eta_re
         Q_pen, const_pen = get_QUBO_TSP(Nc, 1, None, None, penalization=True, objective=False)
         Q_obj, const_obj = get_QUBO_TSP(Nc, 1, info_instance, info_type, penalization=False, objective=True)
         problem_type_Mfunc = "TSP"
+    elif problem_type == "PO":
+        N = N_stocks[N_idx]
+        size = (N, w)
+        n_bits = N*w
+        info_type = "seed"
+        info_instance = (directory, vseed)
+        Q_pen, const_pen = get_QUBO_PO(N, w, 1, info_type, info_instance, penalization=True, objective=False)
+        Q_obj, const_obj = get_QUBO_PO(N, w, 1, info_type, info_instance, penalization=False, objective=True)
+        problem_type_Mfunc = "PO"
     else:
         raise ValueError("What problem are we solving?")
 
@@ -266,13 +369,16 @@ def run_SA(dict_run, problem_type, N_idx, vseed, temperatures, Mstrategy, eta_re
     ### 3. From [LCBO, \beta_{final}] compute M^*, \eta_{guarantee} using our algorithm. Also, compute M_{\ell_1}
     min_pfeas = eta_required  # eta
     peak_max = 4
-    if problem_type == "NPP" or problem_type == "TSP_circle" or problem_type == "TSP_case":
+    if problem_type == "PO":
+        E_LB = lower_bound_obj_PO(N, w, info_instance)
+        peak_max = 25
+    else:
         E_LB = 0
     if Mstrategy == "optimality":
         E_f = select_Ef(problem_type, N_idx)
-        M_star, eta_guaranteed = M_method_opt(size, problem_type_Mfunc, info_instance, info_type, beta_final, peak_max, min_pfeas, E_f, E_LB)
+        M_star, eta_guaranteed = M_method_opt(size, problem_type_Mfunc, info_instance, info_type, beta_final, peak_max, min_pfeas, E_f, E_LB, log_stable=True)
     elif Mstrategy == "feasibility":
-        M_star, eta_guaranteed = M_method_feas(size, problem_type_Mfunc, info_instance, info_type, beta_final, peak_max, min_pfeas, E_LB)
+        M_star, eta_guaranteed = M_method_feas(size, problem_type_Mfunc, info_instance, info_type, beta_final, peak_max, min_pfeas, E_LB, log_stable=True)
     M_L1 = L1_norm_hot(Q_obj, const_obj, n_bits, 1 / beta_final, min_pfeas)
 
     ### 4. Run SA on QUBO(M^*) and collect samples X
@@ -282,6 +388,9 @@ def run_SA(dict_run, problem_type, N_idx, vseed, temperatures, Mstrategy, eta_re
     elif problem_type[:3] == "TSP":
         Q, const = get_QUBO_TSP(Nc, M_star, info_instance, info_type)
         SA_const_steps = Nc
+    elif problem_type == "PO":
+        Q, const = get_QUBO_PO(N, w, M_star, info_type, info_instance)
+        SA_const_steps = N
     else:
         raise ValueError("What problem are we solving?")
 
@@ -317,13 +426,18 @@ def run_SA(dict_run, problem_type, N_idx, vseed, temperatures, Mstrategy, eta_re
     return 
 
 
-def run_instance(problem_type, N_idx, vseed, M_strategy, eta_required, DAtemp_scaler):
+def run_instance(problem_type, N_idx, info_instance, M_strategy, eta_required, DAtemp_scaler):
+    if problem_type == "PO":
+        _, vseed = info_instance
+    else:
+        vseed = info_instance
     data = {}
     data["vseed_"+str(vseed)] = {}
     E_f = select_Ef(problem_type, N_idx)
     data["vseed_"+str(vseed)]["E_f"] = E_f
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)] = {}
     temps = copy_DA_temperatures(problem_type, N_idx, vseed) * DAtemp_scaler
+
     if problem_type == "TSP_case":
         Nc = N_city_case[N_idx]
         adj = load_adjacency_usecases(cases_names[str(Nc)][0])
@@ -334,7 +448,7 @@ def run_instance(problem_type, N_idx, vseed, M_strategy, eta_required, DAtemp_sc
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy] = {}
     data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy]["eta_req_"+str(eta_required)] = {}
     dict_run = data["vseed_"+str(vseed)]["Tscale_"+str(DAtemp_scaler)][M_strategy]["eta_req_"+str(eta_required)] 
-    run_SA(dict_run, problem_type, N_idx, vseed, temps, M_strategy, eta_required, SA_samples = 300)
+    run_SA(dict_run, problem_type, N_idx, vseed, temps, M_strategy, eta_required, SA_samples = 1000)
     return data
 
 
@@ -346,11 +460,9 @@ Ns = 8 * Ps
 N_city_circle = np.arange(4, 27, 2)
 N_city_case = np.array([14, 16, 17, 21, 22, 26])
 cases_names = {'38': ['ftv38'], '33': ['ftv33'], '42': ['dantzig42', 'swiss42'], '48': ['ry48p', 'hk48', 'gr48', 'att48'], '44': ['ftv44'], '43': ['p43'], '17': ['br17', 'gr17'], '53': ['ft53'], '21': ['gr21'], '55': ['ftv55'], '58': ['brazil58'], '14': ['burma14'], '29': ['bayg29', 'bays29'], '16': ['ulysses16'], '35': ['ftv35'], '47': ['ftv47'], '52': ['berlin52'], '22': ['ulysses22'], '26': ['fri26']}
-# N_idx = 0 # between 0 and 13
-# vseeds = range(42,46) # between 42 and 45
-# M_strategies = ["feasibility", "optimality"]
-# temperature_scalers = [1, 10, 100] # only as integers, for keys of dictionary
-# etas_req = [.25, .5, .75]
+N_stocks = np.array([2, 4, 6, 8, 10, 15, 20, 30, 40, 50, 60])
+w = 5
+directory = "PO_big"
 
 try:
     problem_type = sys.argv[1]
@@ -363,19 +475,22 @@ except (IndexError, ValueError):
     print("Wrong usage of code. Correct usage:\npython SA_simulations.py problem_model(TSP/NPP) size_index vseed M_strategy(opt/feas) DA_temperature_scaler eta_required")
     sys.exit(1)
     
-
+info_instance = vseed
 if problem_type == "NPP":
     filename = f"../data/SA_NPP/results-N={Ns[N_idx]}_P={Ps[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
 elif problem_type == "TSP_circle":
     filename = f"../data/SA_TSP_circle/results-Nc={N_city_circle[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
 elif problem_type == "TSP_case":
     filename = f"../data/SA_TSP_case/results-Nc={N_city_case[N_idx]}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
+elif problem_type == "PO":
+    filename = f"../data/SA_PO/results-N={N_stocks[N_idx]}_w={w}_pars_{N_idx}_{vseed}_{M_strategy}_{temperature_scaler}_{eta_req}.txt"
+    info_instance = (directory,  vseed)
 print(filename)
 if os.path.exists(filename):
     raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
 
-data = run_instance(problem_type, N_idx, vseed, M_strategy, eta_req, temperature_scaler)
+data = run_instance(problem_type, N_idx, info_instance, M_strategy, eta_req, temperature_scaler)
 
-# file = open(filename, "wb")
-# pickle.dump(data, file)
-# file.close()
+file = open(filename, "wb")
+pickle.dump(data, file)
+file.close()
