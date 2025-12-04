@@ -129,7 +129,7 @@ def M_method_feas(size, problem_type, info_instance, info_type, beta, peak_max, 
     min_pfeas_triviality = f_min_pfeas_triviality_feas(n_viols[1:], integral, beta, E_LB, log_stable)
     if min_pfeas <= min_pfeas_triviality:
         print(f"With tolerance {min_pfeas}, the sampling probability requirement is satisfied for any M. Setting M=0.")
-        return 0
+        return 0, min_pfeas
     
     ## build function 
     if log_stable:
@@ -475,7 +475,7 @@ def n_viols_exact_NPP(N, P, v_max):
             case i if 1 <= i < 4:
                 p[v] = np.float128(P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v
             case i if 4 <= i < 8:
-                p[v] = np.float128(P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v  +  np.float128(v-3) * comb(N, v-3) * P**(N - v + 3) * comb(P, 3) * (1 + comb(P, 2))**(v-4)
+                p[v] = np.float128(P)**(N-v) * comb(N, v) * (1 + comb(P, 2))**v  +  np.float128(v-3) * comb(N, v-3) * np.float128(P)**(N - v + 3) * comb(P, 3) * (1 + comb(P, 2))**(v-4)
     return p
 
 def n_viols_exact_TSP(Nc, v_max):

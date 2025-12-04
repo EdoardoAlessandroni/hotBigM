@@ -4,7 +4,6 @@ import time
 
 def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
     """Submits a Slurm job with specified parameters."""
-    time.sleep(.3)
 
     job_filename = f"send_job_{problem_type}_{N_idx}_{vseed}_{M_strat}_{temp_scale}_{eta_req}.sh"
     
@@ -37,9 +36,9 @@ def ReSendJob(N_idx, vseed, M_strat, temp_scale, eta_req):
 # Iterate over parameters and submit jobs
 
 problem_type = "PO"
-N_idxs= [0,1,2,3,4] # for NPP [0,..,5], for TSP [0,...,3], for PO [0,...,10]
+N_idxs= [4,5,6,7,8,9,10] # for NPP [0,..,5], for TSP [0,...,3], for PO [0,...,10]
 vseeds = range(42,43) # between 42 and 46 for NPP and TSP_rand, between 42 and 9942 (with jumps of 100) for PO, only 42 for TSP_circle
-M_strategies = ["feasibility", "optimality"]
+M_strategies = ["feasibility"] ######## TODO: EXPERIMENT ON OPTIMALITY TOO
 temperature_scalers = [1, 10, 100]
 etas_req = [.25, .5, .75]
 

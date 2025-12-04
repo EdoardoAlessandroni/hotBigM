@@ -241,7 +241,7 @@ def L1_norm(Q, const):
 
 
 def L1_norm_hot(Q, const, n_bits, temperature, min_pfeas):
-    return L1_norm(Q, const) + temperature * (n_bits * np.log(2) - np.log(min_pfeas))
+    return L1_norm(Q, const) + temperature * (n_bits * np.log(2) - np.log(1-min_pfeas))
 
 
 def evaluate_energy(solution, Q, const):
@@ -310,7 +310,7 @@ def select_Ef(problem_type, N_idx):
         return 3.5e-2 * n_bits**2
     elif problem_type == "PO":
         n_bits = w*N_stocks[N_idx]
-        return 3e-2 * n_bits**2
+        return .5 * n_bits**2
     else:
         raise ValueError("What problem are we solving?")
 
@@ -487,7 +487,7 @@ elif problem_type == "PO":
     info_instance = (directory,  vseed)
 print(filename)
 if os.path.exists(filename):
-    raise ValueError(f"Filename {filename} already exists, are you sure you want to overwrite it?")
+    raise ValueError(f"Filename {filename} already exists, re you sure you want to overwrite it?")
 
 data = run_instance(problem_type, N_idx, info_instance, M_strategy, eta_req, temperature_scaler)
 

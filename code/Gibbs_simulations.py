@@ -228,7 +228,7 @@ def L1_norm(Q, const):
     return const + np.sum(np.abs(Q))
 
 def L1_norm_hot(Q, const, n_bits, temperature, min_pfeas):
-    return L1_norm(Q, const) + temperature * (n_bits * np.log(2) - np.log(min_pfeas))
+    return L1_norm(Q, const) + temperature * (n_bits * np.log(2) - np.log(1-min_pfeas))
 
 def evaluate_energy(solution, Q, const):
     return const + np.dot(solution, np.dot(Q, solution))
@@ -385,12 +385,6 @@ N_city_rand = np.arange(2, 6)
 N_stocks = np.arange(2, 9)
 w = 3
 directory = "PO_small"
-# next 3 lines are for debugging (refer to SA tests actually), remove for actual Gibbs runs
-N_stocks = np.array([2, 4, 6, 8, 10, 15, 20, 30, 40, 50, 60])
-w = 5
-directory = "PO_big"
-
-
 
 n_Gibbs_samples = 1000
 

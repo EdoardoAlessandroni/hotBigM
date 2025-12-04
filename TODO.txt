@@ -1,31 +1,15 @@
-Soonish:
-- Correct paper's comments
-- Collect results and plots:
-    - log(M^*/M_l1) for dichotomic
-    - \eta_eff/eta_req for different betas
-    - n_pen(v) forall benchmarks (analytical function)
-    - M^*(v_max) (No sampler, only MyAlgo)
-    - M^*(E_f) (No sampler, only MyAlgo)
-- Portfolio Optimization application:
-    - SDP relaxation to get E_LB
-    - Test it
-- Check T_eff technique and feasibility of DWave experiment
-- Add to the paper the sampling guarantee with approximations and relative errors
-- Add to the paper the feasibility M_strategy
-- Add to the paper the M_L1(\beta) formula and proof
-- Add to the paper the discussion on the  relation to the thermal population at the end of a quantum annealing
-- Add to the paper the discussion on the triviality and existence of the solution
-- Add to the paper the numerically stable version in log space
-- Add to the paper that, for the feasibility M_strategy at least (check if it holds for the optimality as well), you can work out rescaled LCBO by rescaling temperatures as well.
-    - say we want to solve for the LCBO with objective \tilde Q = \alpha Q
-    - run our algo for the unscaled algorithm with temperature fixed to \beta = \beta_solver * \alpha, get M_unscaled
-    - M for the scaled \tilde LCBO will then be M = M_unscaled * \alpha, sufficient for solving the problem with a solver at \beta = \beta_solver
-
+- Computational Complexity, polish
+- Penalization density can't grow exponentially? Illustrate arguments
+- Change E_LB to min(E) in the integrals estimations?
+- Add to the paper the approximations (v_cut and uniform sampling) to the sampling guarantee and its relative errors
+- Fix notation after Ingo's upload
+- Big introductory figure:
+    - remove I_1/2 estimations?
+    - equality sign in g function definition
+    - penalization degeneracies, only the number of states, not the curve
+    - labels n_obj... bad nomenclature
 
 Later than sooner:
-- Check MNPP hardness
-- TSP add the constraint \sum_{ (i,j) \nin E } \sum_t x_{i,t} x_{j,t+1} = 0
-
-
-Comments:
-- old error in notebook: beta = 10^-8, E_f = 3*10^5, \eta_eff < eta_req = 0.5 for NPP (Gibbs? N_idx?). Answer: probably a regime (e.g. beta too large) for which the approximations (in particular the v_max \to v_cut approximation) are not valid anymore.
+- Check T_eff technique (or, better, https://arxiv.org/pdf/2506.03241) and feasibility of DWave/IonQ experiment 
+- Mention the rescaling LCBO argument:
+    $Q, \beta, M \iff \alpha Q, \beta/\alpha, \alpha M$... if we want to work with a LCBO whose interaction matrix is scaled wrt another original LCBO $\tilde Q = \alpha Q$ and if we know that for solving the original problem at temperature $\beta$ a weight $M$ is sufficient, then you can also solve the scaled problem by using a weight $\tilde M = \alpha M$ and a termal solver at temperature $\tilde \beta = \beta / \alpha$
