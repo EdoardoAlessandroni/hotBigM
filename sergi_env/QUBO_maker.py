@@ -2,7 +2,6 @@ import numpy as np
 import random
 from myalgo import M_method_feas, M_method_opt
 import pickle
-import sys
 from timeit import default_timer as timer
 from qiskit_optimization.translators import from_docplex_mp
 from docplex.mp.model_reader import ModelReader
