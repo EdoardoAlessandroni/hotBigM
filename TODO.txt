@@ -1,15 +1,4 @@
-- Computational Complexity, polish
-- Penalization density can't grow exponentially? Illustrate arguments
-- Change E_LB to min(E) in the integrals estimations?
-- Add to the paper the approximations (v_cut and uniform sampling) to the sampling guarantee and its relative errors
-- Fix notation after Ingo's upload
-- Big introductory figure:
-    - remove I_1/2 estimations?
-    - equality sign in g function definition
-    - penalization degeneracies, only the number of states, not the curve
-    - labels n_obj... bad nomenclature
-
-Later than sooner:
-- Check T_eff technique (or, better, https://arxiv.org/pdf/2506.03241) and feasibility of DWave/IonQ experiment 
-- Mention the rescaling LCBO argument:
-    $Q, \beta, M \iff \alpha Q, \beta/\alpha, \alpha M$... if we want to work with a LCBO whose interaction matrix is scaled wrt another original LCBO $\tilde Q = \alpha Q$ and if we know that for solving the original problem at temperature $\beta$ a weight $M$ is sufficient, then you can also solve the scaled problem by using a weight $\tilde M = \alpha M$ and a termal solver at temperature $\tilde \beta = \beta / \alpha$
+Test overshoot on PO
+p_threshold for unsolvability of M problem in QAOA?
+loop: norm -> M -> T_unnorm -> norm ...
+ 

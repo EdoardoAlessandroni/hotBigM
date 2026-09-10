@@ -171,6 +171,8 @@ def f_min_pfeas_triviality_feas(n_viols, integral_feas, beta, E_LB, log_stable):
         arguments = np.array([ log_n_viol[j] for j in np.arange(len(n_viols))])  -  beta*E_LB
         log_inf = LSE(arguments)
         log_diff = log_inf - integral_feas
+        if log_diff > 709: # in this case, np.exp(log_diff) would return an overflow error, but the probablity to be returned should be 0 anyway
+            return 0
         return 1/(1 + np.exp( log_diff ))
     else:
         return integral_feas / (integral_feas + np.exp(-beta*E_LB)*np.sum(n_viols))
