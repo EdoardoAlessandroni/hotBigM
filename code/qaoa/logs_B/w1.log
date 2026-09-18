@@ -1,0 +1,10 @@
+cells [(6, 1), (6, 2), (9, 1), (9, 3), (12, 1), (12, 2), (6, 3), (9, 2), (12, 3)]  worker 1/14: 26 configs
+...breaking at iteration 1539 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   v= 42 s=  442:  AR=0.5948 (blind 0.5869)  cost=-0.26237951  eta=0.7500  [123s]
+...breaking at iteration 2939 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=142 s=31337:  AR=0.7094 (blind 0.6814)  cost=-0.26236764  eta=0.9998  [268s]
+...breaking at iteration 1419 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.797
+L1   v=342 s= 2024:  AR=0.5400 (blind 0.5439)  cost=-0.26249679  eta=0.7974  [125s]

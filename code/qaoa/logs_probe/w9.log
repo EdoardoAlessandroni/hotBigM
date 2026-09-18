@@ -1,0 +1,17 @@
+worker 9/10: 4 configs
+...breaking at iteration 1649 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1919 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+base      p=2 v=442:  AR=0.8433  (blind 0.6568)  P_feas=1.0000  eta=1.0000  cost=-0.700748  [291s]
+...breaking at iteration 2599 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1699 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+seed7     p=2 v=442:  AR=0.9583  (blind 0.6568)  P_feas=1.0000  eta=1.0000  cost=-0.701174  [372s]
+...breaking at iteration 2989 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+seed2024  p=2 v=442:  AR=0.7217  (blind 0.6568)  P_feas=1.0000  eta=1.0000  cost=-0.700298  [391s]
+...breaking at iteration 4879 out of 6000 (best cost improved by 0.000e+00 < 1.0e-12 over the last 500 steps)
+...breaking at iteration 2279 out of 6000 (best cost improved by 0.000e+00 < 1.0e-12 over the last 500 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+tol12     p=2 v=442:  AR=0.8433  (blind 0.6568)  P_feas=1.0000  eta=1.0000  cost=-0.700748  [349s]
+worker 9 done

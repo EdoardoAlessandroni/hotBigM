@@ -1,0 +1,6 @@
+ONLY mode: [(15, 1, 442, 'star')]
+worker 0/1: 1 configs
+...breaking at iteration 2279 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.603
+star n=15 p=1 v=442:  M=    322.9  share=3.63e-04  P_feas=0.6027  eta=0.6027  gap=0.6699  [1310s]
+worker 0 done, 21.8 min

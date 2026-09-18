@@ -45,6 +45,24 @@ def sample_uniform_feasible(size, info_instance, info_type, problem_type, n_samp
     return eners
 
 
+def Ef_percentile_feasible(size, info_instance, info_type, problem_type, percentile = 75, n_samples = 10_000, seed = 0):
+    ''' Instance-adaptive energy cutoff for the optimality strategy: the given percentile of the
+    objective spectrum restricted to the feasible subspace. Replaces a hardcoded E_f(n_bits), which
+    cannot track the per-instance offset/scale of the objective (for PO the feasible spectrum does
+    not even grow with n_bits). Any percentile in [50, 100] is admissible by construction: it leaves
+    at least half of the feasible mass below E_f while staying inside the spectrum.
+    Deterministic given (size, instance, percentile), so callers that need the very same E_f both to
+    solve for M and to score the result do not have to thread it through: the global numpy RNG state
+    is saved and restored, so seeding here does not perturb the surrounding pipeline. '''
+    state = np.random.get_state()
+    try:
+        np.random.seed(seed)
+        eners = sample_uniform_feasible(size, info_instance, info_type, problem_type, n_samples)
+    finally:
+        np.random.set_state(state)
+    return float(np.percentile(eners, percentile))
+
+
 def logsafe(arr):
     """Return log(arr) but map zeros -> -inf, negatives raise."""
     arr = np.asarray(arr)
@@ -208,8 +226,13 @@ def build_func_for_root(n_viols, beta, E_LB, p_feas_term, log_stable):
 
 
 ### Main function
-def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB, log_stable = False):
-    ''' Main algorithm for the optimality strategy. Returns penalty weigth M (and guaranteed success prob) such that QUBO reformulation with M, sampled by a Gibbs sampler at temperature beta, guarantees a certain success probability'''
+def M_method_opt(size, problem_type, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB, log_stable = False, Ef_from_percentile = False, Ef_percentile = 75):
+    ''' Main algorithm for the optimality strategy. Returns penalty weigth M (and guaranteed success prob) such that QUBO reformulation with M, sampled by a Gibbs sampler at temperature beta, guarantees a certain success probability.
+    With Ef_from_percentile = True the passed E_f is ignored and replaced by Ef_percentile_feasible(...),
+    i.e. the Ef_percentile-th percentile of the feasible objective spectrum of this very instance. Off by
+    default, so the behaviour for every existing caller is unchanged. '''
+    if Ef_from_percentile:
+        E_f = Ef_percentile_feasible(size, info_instance, info_type, problem_type, percentile = Ef_percentile)
     ## evaluate violation peaks and cumulatives
     n_viols = n_violations_problem(problem_type, size, peak_max)
 

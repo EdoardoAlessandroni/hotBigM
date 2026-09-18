@@ -1,0 +1,9 @@
+n=6 p=3  worker 7/14: 3 configs -> data_qaoa/_multistart_n6p3
+...breaking at iteration 2879 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.889
+L1   v= 42 s=31337:  AR=0.6873 (blind 0.5869)  cost=-0.26240381  eta=0.8893  [669s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s= 2024:  AR=0.6916 (blind 0.5810)  cost=-0.26268135  eta=1.0000  [414s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=    7:  AR=0.7027 (blind 0.5257)  cost=-0.26291538  eta=0.9999  [362s]
+worker 7 done

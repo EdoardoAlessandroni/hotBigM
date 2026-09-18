@@ -26,7 +26,7 @@ import pennylane as qml
 from pennylane import qaoa
 from pennylane import numpy as pl_np
 
-from myalgo import M_method_feas, M_method_opt
+from myalgo import M_method_feas, M_method_opt, Ef_percentile_feasible
 
 
 # Problem-size grids, mirrored from qaoa_playground.ipynb (kept fixed there
@@ -386,6 +386,49 @@ def run_qaoa_with_solution(
 
 
 
+def interp_extend_layers(series):
+    """INTERP layer extension (Zhou et al., PRX 10, 021067 (2020), Sec. IV B).
+
+    Maps an optimized p-layer parameter series to a (p+1)-layer initial guess by linearly
+    re-interpolating it onto a finer grid:
+
+        x'_i = (i-1)/p * x_{i-1} + (p-i+1)/p * x_i ,   i = 1..p+1,   x_0 = x_{p+1} = 0
+
+    Vanilla QAOA has one gamma and one beta series; ma-QAOA has one series per Pauli term and
+    per qubit, and the formula acts along the LAYER axis only, so it applies unchanged to each
+    column independently. `series` is (p, n_params) and the result is (p+1, n_params).
+    """
+    X = np.asarray(series, dtype=float)
+    p = X.shape[0]
+    Xpad = np.vstack([np.zeros((1, X.shape[1])), X, np.zeros((1, X.shape[1]))])  # x_0 .. x_{p+1}
+    return np.stack([((i - 1) * Xpad[i - 1] + (p - i + 1) * Xpad[i]) / p
+                     for i in range(1, p + 2)])
+
+
+def run_ma_qaoa_interp(qubo_dict, num_qubits, p, verbose=False, **kw):
+    """Train ma-QAOA up to depth p by INTERP warm starts: 1 -> 2 -> ... -> p.
+
+    Depth 1 is trained from the usual random init; every deeper circuit starts from the
+    previous depth's optimum, extended by `interp_extend_layers`. Motivation: at p >= 2 the
+    trained circuit concentrates on a single feasible basis state, so eta_eff is effectively
+    the indicator of whether THAT state lies below E_f. Which state it lands on is decided by
+    the basin Adam starts in, and at p=3 a cold random init draws that basin at random (hence
+    the 0/1 bimodality). Warm-starting makes depth p inherit the basin depth p-1 found.
+
+    Returns exactly what run_ma_qaoa_with_solution returns at depth p.
+    """
+    init = None
+    for p_cur in range(1, p + 1):
+        out = run_ma_qaoa_with_solution(qubo_dict, num_qubits, p=p_cur, init_params=init,
+                                        verbose=verbose, **kw)
+        (g, b), best_cost = out[0], out[-1]
+        if verbose:
+            print(f"  [INTERP] depth {p_cur}/{p}: cost = {best_cost:+.6f}")
+        if p_cur < p:
+            init = (interp_extend_layers(g), interp_extend_layers(b))
+    return out
+
+
 def run_ma_qaoa_with_solution(
     qubo_dict: dict,
     num_qubits: int,
@@ -398,7 +441,7 @@ def run_ma_qaoa_with_solution(
     verbose: bool = True,
     draw_samples: bool = True,
     tolerance_opt: float = 1e-4,
-    patience: int = 3,                # NEW: require N consecutive small diffs to stop
+    patience: int = 30,               # stop only after patience*10 steps with no real improvement
 ):
     """
     Multi-angle QAOA (ma-QAOA), Herrman et al. 2022.
@@ -504,6 +547,24 @@ def run_ma_qaoa_with_solution(
     best_gammas, best_betas, best_cost = None, None, np.inf
     epsilon, step_check = tolerance_opt, 10
 
+    # Stopping rule: break only when the BEST cost has improved by less than `epsilon` across a
+    # whole window of `patience * step_check` steps.
+    #
+    # The previous rule compared adjacent check-points of the *current* cost and required
+    # `patience` CONSECUTIVE flat ones. Two problems, both of which made it stop far too early:
+    #   * `cost_val` oscillates under Adam, so two adjacent samples can be accidentally close
+    #     while real descent continues; `best_cost` is monotone and cannot do that.
+    #   * requiring each sub-window to be flat is not the same as requiring no progress: a slow
+    #     steady descent trips it, and one lucky step resets the counter.
+    # Measured consequence at n=9, p=2 (PO, M0=0): training stopped at step 369/3000 on a plateau
+    # ~6e-4 away in cost from a solution the p=1 run had already found -- five orders of magnitude
+    # above the 1e-8 threshold that triggered the stop.
+    #
+    # Deliberately NOT changed: `epsilon` is still absolute. It arguably should be relative, since
+    # the cost carries a large constant offset and is scaled by max|Q| = 40M with M spanning five
+    # decades across this study. But a relative threshold can stop runs EARLIER than before, which
+    # would invalidate existing results. Both changes here can only ever make training run longer,
+    # so no previously-converged run can be made worse by them.
     for step in range(steps):
         (gammas, betas), cost_val = optimizer.step_and_cost(cost_node, gammas, betas)
         if cost_val < best_cost:
@@ -512,13 +573,16 @@ def run_ma_qaoa_with_solution(
             best_betas  = betas.copy()
 
         if (step + 1) % step_check == 0:
-            cost_history.append(float(cost_val))
+            cost_history.append(float(best_cost))
             if verbose:
-                print(f"  step {step+1:>4d}/{steps}  |  cost = {cost_val:+.6f}")
-            if len(cost_history) > 1:
-                diff_10 = np.abs(cost_history[-2] - cost_history[-1])
-                if diff_10 < epsilon:
-                    print(f"...breaking at iteration {step} out of {steps}")
+                print(f"  step {step+1:>4d}/{steps}  |  cost = {cost_val:+.6f}  "
+                      f"|  best = {best_cost:+.6f}")
+            if len(cost_history) > patience:
+                improvement = cost_history[-(patience + 1)] - cost_history[-1]
+                if improvement < epsilon:
+                    print(f"...breaking at iteration {step} out of {steps} "
+                          f"(best cost improved by {improvement:.3e} < {epsilon:.1e} over the "
+                          f"last {patience * step_check} steps)")
                     break
 
     # ── 6. Outputs ──────────────────────────────────────────────────────────
@@ -776,9 +840,22 @@ def qaoa_sampling_oneshot(problem_type, N_idx, info_instance, Mstrategy, eta_req
 def maqaoa_sampling_oneshot(problem_type, N_idx, info_instance, Mstrategy, eta_required,
                            layers, qaoa_samples=1000, qaoa_steps=100,
                            M0_ref="L1", use_sdp_pen=True,
+                           Ef_from_percentile=False, Ef_percentile=75,
+                           qaoa_seed=442, tolerance_opt=1e-4, warm_start=False,
+                           M_choice="star", patience=30,
                            print_time=True, verbose_qaoa=False, verbose=False):
     """ Run an instance, first using our M algo to compute M^* and then sampling with QAOA the resulting QUBO.
-     Fixed are the instance (seed and size), the Mstrategy and relative probablity required (eta) and the temperature schedule for SA, which copies DA's, scaled by a factor """
+     Fixed are the instance (seed and size), the Mstrategy and relative probablity required (eta) and the temperature schedule for SA, which copies DA's, scaled by a factor.
+     Ef_from_percentile (optimality strategy only) swaps the hardcoded select_Ef(problem_type, N_idx)
+     for the Ef_percentile-th percentile of this instance's feasible objective spectrum.
+
+     M_choice selects which penalty weight is actually deployed in step 3:
+       "star" (default) -- M^* from our algorithm, the original behaviour;
+       "L1"             -- the naive closed-form M_L1(beta) of Eq. 12, evaluated at the SAME
+                           beta = 1/temperature_unnormalized that feeds M_method_*. Everything
+                           else (s_conv, beta, E_f, seeds, warm start) is untouched, so the two
+                           arms differ in the single variable M. Both Ms are always computed and
+                           returned; only the deployed one changes. """
     t1 = timer()
     
     ### 1. Get LCBO
@@ -848,22 +925,35 @@ def maqaoa_sampling_oneshot(problem_type, N_idx, info_instance, Mstrategy, eta_r
     temperature_unnormalized = s_conv * temperature_normalized
     beta = 1 / temperature_unnormalized
 
+    E_f = None
     if Mstrategy == "optimality":
-        E_f = select_Ef(problem_type, N_idx)
-        M_star, eta_guaranteed = M_method_opt(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB, log_stable = True)
+        # Ef_percentile_feasible is deterministic, so this is the exact same cutoff M_method_opt
+        # solves against below -- step 4 needs it too, to score eta_eff against the same threshold.
+        if Ef_from_percentile:
+            E_f = Ef_percentile_feasible(size, info_instance, info_type, problem_type_Mfunc, percentile = Ef_percentile)
+        else:
+            E_f = select_Ef(problem_type, N_idx)
+        M_star, eta_guaranteed = M_method_opt(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_f, E_LB, log_stable = True, Ef_from_percentile = Ef_from_percentile, Ef_percentile = Ef_percentile)
     elif Mstrategy == "feasibility":
         M_star, eta_guaranteed = M_method_feas(size, problem_type_Mfunc, info_instance, info_type, beta, peak_max, min_pfeas, E_LB, log_stable = True)
     M_L1 = L1_norm_hot(Q_obj, const_obj, n_bits, temperature_unnormalized, min_pfeas)
     # print(f"With an instance with {n_bits} bits, {layers} layers and (thus) est. temp. (UNnorm) {np.round(temperature_unnormalized, 3)} [norm -> {np.round(temperature_normalized, 3)}], the appropriate M is {M_star}")
     # print(f"With an instance with {n_bits} bits, {layers} layers, M* is {M_star}, M_L1 is {M_L1}")
 
-    ### 3. Run QAOA sampler on QUBO(M^*) and collect samples
+    ### 3. Run QAOA sampler on QUBO(M_used) and collect samples
+    if M_choice == "star":
+        M_used = M_star
+    elif M_choice == "L1":
+        M_used = M_L1
+    else:
+        raise ValueError(f"M_choice {M_choice!r} not understood; use 'star' or 'L1'")
+
     if problem_type == "NPP":
-        Q, const = get_QUBO_NPP(N, P, M_star, info_instance)
+        Q, const = get_QUBO_NPP(N, P, M_used, info_instance)
     elif problem_type[:3] == "TSP":
-        Q, const = get_QUBO_TSP(Nc, M_star, info_instance, info_type)
+        Q, const = get_QUBO_TSP(Nc, M_used, info_instance, info_type)
     elif problem_type == "PO":
-        Q, const = get_QUBO_PO(N, w, M_star, info_type, info_instance)
+        Q, const = get_QUBO_PO(N, w, M_used, info_type, info_instance)
     else:
         raise ValueError("What problem are we solving?")
 
@@ -873,14 +963,17 @@ def maqaoa_sampling_oneshot(problem_type, N_idx, info_instance, Mstrategy, eta_r
     Q_norm, const_norm = Q_norm/norm_final, const_norm/norm_final
 
     Q_dict = {idx: val for idx, val in np.ndenumerate(Q_norm) if not np.isclose(val, 0)} # Create a dictionary with the non-zero entries of the Q matrix
-    circuit_params, states, probs_qaoa, _ = run_ma_qaoa_with_solution(
+    runner = run_ma_qaoa_interp if warm_start else run_ma_qaoa_with_solution
+    circuit_params, states, probs_qaoa, best_cost = runner(
         Q_dict, n_bits,
         p=layers,                 # try small p first; expressivity per layer is much higher
         steps=qaoa_steps,
         n_samples=qaoa_samples,
         verbose=verbose_qaoa,
         draw_samples=True,
-        seed=442,
+        seed=qaoa_seed,
+        tolerance_opt=tolerance_opt,
+        patience=patience,
     )
 
     ### 4. From [LCBO, X] computed sampled energies [E_o, E_p]
@@ -920,6 +1013,12 @@ def maqaoa_sampling_oneshot(problem_type, N_idx, info_instance, Mstrategy, eta_r
     results["M_star"] = M_star
     results["QUBO"] = (Q, const)
     results["circuit_params"] = circuit_params
+    results["best_cost"] = float(best_cost)   # final training cost, for restart selection
+    results["M_choice"] = M_choice
+    results["M_used"] = float(M_used)         # the penalty actually deployed in the QUBO above
+    results["E_f"] = E_f
+    results["Ef_from_percentile"] = Ef_from_percentile
+    results["Ef_percentile"] = Ef_percentile if Ef_from_percentile else None
     # span-proxy diagnostics
     results["s_conv"] = s_conv
     results["norm_guess"] = s_conv  # backward-compat alias for downstream plotting
@@ -927,4 +1026,8 @@ def maqaoa_sampling_oneshot(problem_type, N_idx, info_instance, Mstrategy, eta_r
     results["M_L1"] = M_L1
     results["UB_obj"] = UB_obj
     results["UB_pen"] = UB_pen
+    # training-protocol bookkeeping: the stopping rule changed on 2026-09-18, so runs are only
+    # comparable to each other if these match (see run_ma_qaoa_with_solution's stopping rule)
+    results["patience"] = patience
+    results["tolerance_opt"] = tolerance_opt
     return results

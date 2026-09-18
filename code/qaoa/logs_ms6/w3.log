@@ -1,0 +1,8 @@
+n=6 p=3  worker 3/14: 3 configs -> data_qaoa/_multistart_n6p3
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.96
+L1   v= 42 s=    7:  AR=0.6886 (blind 0.5869)  cost=-0.26240701  eta=0.9598  [467s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.953
+L1   v=242 s=  442:  AR=0.6847 (blind 0.5810)  cost=-0.26266607  eta=0.9533  [658s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=342 s=31337:  AR=0.6526 (blind 0.5439)  cost=-0.26272057  eta=1.0000  [359s]
+worker 3 done

@@ -1,0 +1,23 @@
+worker 1/10: 11 configs
+test_PO_bits_6_vseed_42_layers_1_etareq_0.5.txt [L1] exists, skipping
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   n= 9 p=1 v=42:  M=      444  share=2.89e-04  P_feas=1.0000  eta=0.7500  gap=1.0404  [205s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.493
+L1   n=12 p=1 v=42:  M=    980.4  share=1.31e-04  P_feas=0.5915  eta=0.4929  gap=0.9706  [508s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.539
+L1   n=15 p=1 v=42:  M=     2825  share=7.37e-05  P_feas=0.6033  eta=0.5392  gap=0.9381  [2139s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.992
+L1   n= 6 p=2 v=242:  M=    73.12  share=1.79e-03  P_feas=1.0000  eta=0.9924  gap=0.8501  [236s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   n= 9 p=2 v=242:  M=    300.3  share=4.36e-04  P_feas=1.0000  eta=0.7499  gap=1.1416  [469s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.953
+L1   n= 6 p=3 v=242:  M=    50.89  share=2.57e-03  P_feas=1.0000  eta=0.9533  gap=0.7525  [487s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   n=12 p=2 v=242:  M=    784.4  share=1.67e-04  P_feas=1.0000  eta=1.0000  gap=0.9780  [1681s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   n=15 p=2 v=242:  M=     1927  share=6.80e-05  P_feas=1.0000  eta=0.7500  gap=0.9436  [5823s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   n= 9 p=3 v=442:  M=    116.3  share=9.92e-04  P_feas=1.0000  eta=1.0000  gap=0.0007  [968s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   n=12 p=3 v=442:  M=    443.6  share=2.62e-04  P_feas=1.0000  eta=1.0000  gap=1.0122  [2195s]
+worker 1 done, 245.2 min

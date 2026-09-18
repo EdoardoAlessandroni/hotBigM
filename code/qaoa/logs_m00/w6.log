@@ -1,0 +1,19 @@
+worker 6/10: 11 configs
+test_PO_bits_6_vseed_342_layers_1_etareq_0.5.txt [star] exists, skipping
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n= 9 p=1 v=342:  M=    75.52  share=1.20e-03  P_feas=1.0000  eta=1.0000  gap=0.0070  [200s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.592
+star n=12 p=1 v=342:  M=    166.8  share=5.42e-04  P_feas=0.5915  eta=0.5915  gap=0.9303  [495s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.898
+star n= 6 p=2 v=42:  M=    18.44  share=6.93e-03  P_feas=0.9999  eta=0.8983  gap=0.6578  [314s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+star n= 9 p=2 v=42:  M=    45.86  share=2.79e-03  P_feas=1.0000  eta=0.7500  gap=1.0404  [761s]
+test_PO_bits_6_vseed_42_layers_3_etareq_0.5.txt [star] exists, skipping
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.5
+star n=12 p=2 v=42:  M=    76.09  share=1.68e-03  P_feas=0.7500  eta=0.5000  gap=0.9890  [1548s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.999
+star n=15 p=2 v=42:  M=    187.9  share=1.11e-03  P_feas=0.9999  eta=0.9995  gap=0.6617  [5411s]
+test_PO_bits_9_vseed_242_layers_3_etareq_0.5.txt [star] exists, skipping
+test_PO_bits_12_vseed_242_layers_3_etareq_0.5.txt [star] exists, skipping
+test_PO_bits_15_vseed_242_layers_3_etareq_0.5.txt [star] exists, skipping
+worker 6 done, 145.5 min

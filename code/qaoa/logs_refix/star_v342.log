@@ -1,0 +1,5 @@
+...breaking at iteration 1889 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1229 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+
+FIXED n=9 p=2 star v=342:  M=38.223  <E_obj>_feas=+0.58558  gap=1.2134  AR_f=0.3875  eta=1.0000  P_feas=1.0000  [286s]

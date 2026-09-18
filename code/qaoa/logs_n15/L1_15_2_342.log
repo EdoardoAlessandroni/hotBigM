@@ -1,0 +1,7 @@
+ONLY mode: [(15, 2, 342, 'L1')]
+worker 0/1: 1 configs
+...breaking at iteration 1409 out of 3000 (best cost improved by 5.848e-09 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1139 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.725
+L1   n=15 p=2 v=342:  M=     1023  share=8.96e-05  P_feas=0.7500  eta=0.7245  gap=0.8478  [1386s]
+worker 0 done, 23.1 min

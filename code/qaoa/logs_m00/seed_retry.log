@@ -1,0 +1,11 @@
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+v=342 seed=  442  M= 38.223  <E_obj>_feas=+0.08810  gap=0.7823  best_cost=-7.005e-01  eta=1.0000
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+v=342 seed=    7  M= 38.223  <E_obj>_feas=+0.59217  gap=1.2191  best_cost=-7.002e-01  eta=1.0000
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+v=342 seed= 2024  M= 38.223  <E_obj>_feas=+0.08808  gap=0.7823  best_cost=-7.005e-01  eta=1.0000
+...breaking at iteration 369 out of 3000 (3 consecutive flat windows)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+v=442 seed=  442  M= 31.174  <E_obj>_feas=+0.88885  gap=1.2226  best_cost=-6.998e-01  eta=1.0000
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+v=442 seed=    7  M= 31.174  <E_obj>_feas=-0.85674  gap=0.1207  best_cost=-7.012e-01  eta=1.0000
