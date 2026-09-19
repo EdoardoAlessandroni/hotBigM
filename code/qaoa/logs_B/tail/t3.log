@@ -1,0 +1,8 @@
+cells [(12, 3)]  worker 0/1: 1 configs
+L1_n12_p3_v442_s442.pkl has no circuit_params -- recomputing
+...breaking at iteration 1429 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1049 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 889 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=  442:  AR=0.5701 (blind 0.5762)  cost=-1.75004016  eta=1.0000  [1168s]
+worker 0 done

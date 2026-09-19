@@ -68,6 +68,24 @@ for arm, d in D0.items():
         rows0.append({**{k: r.get(k) for k in KEEP}, "arm": arm, "M0_ref": 0.0})
 df0 = pd.DataFrame(rows0)
 
+## ---- WHICH INSTANCES: the original five, or all ten? ----
+## Dataset A was grown from 5 to 10 instances per size (HANDOFF.md section 9). Flip VSEED_SET to see
+## what the extra five did to every panel below -- the plots are otherwise identical, so this is a
+## direct visual A/B of the added statistics.
+##   "old"  the original five (42, 142, 242, 342, 442)  -- 120 runs, what the earlier figures showed
+##   "all"  original + top-up                           -- 240 runs, the current dataset A
+##   "new"  the top-up five alone (542 ... 942)         -- 120 runs, for an independent-sample check
+## Caveat when reading "old": 34 of those 120 runs were trained under the PRE-2026-09-18 stopping
+## rule (patience=None), so the "old" view mixes two rules while "new" is uniformly the current one.
+## A difference between the two views is therefore not purely a sampling difference.
+VSEED_SET = "all"
+
+V_OLD = (42, 142, 242, 342, 442)
+V_NEW = (542, 642, 742, 842, 942)
+VSEEDS_SHOWN = {"old": V_OLD, "new": V_NEW, "all": V_OLD + V_NEW}[VSEED_SET]
+df0 = df0[df0.vseed.isin(VSEEDS_SHOWN)].reset_index(drop=True)
+print(f"instances: VSEED_SET={VSEED_SET!r} -> {len(VSEEDS_SHOWN)} vseeds {VSEEDS_SHOWN}")
+
 ## Depths in scope for this section. p=5 runs exist on disk for the M* arm (imported from
 ## `_span_expanded`) but have no M_L1 counterpart, so they would show up as unmatched M*-only
 ## points and inflate the "M* is better" impression. Excluded here rather than deleted; widen this
@@ -88,33 +106,96 @@ print(f"M0=0 head-to-head: {len(df0)} runs  {df0['arm'].value_counts().to_dict()
 ##   (12, 3) -> 7       ALSO AR-targeted: cost would have picked 2024, but 2024 flips the cell's
 ##                      gap negative (M* 0.7545 vs M_L1 0.7615). Seed 7 gives M* 0.6908 vs 0.6221.
 ##
-## Set OVERRIDES = {} to get the untouched seed-442 sweep back. Nothing on disk is modified.
-OVERRIDES = {(9, 2): 31337, (12, 3): 7}
+## OVERRIDES_INSTANCE replaces ONE (n, p, vseed) rather than a whole cell, both arms:
+##   (9, 3, 142) -> 7  the seed-442 run collapsed to AR 0.6596 against a blind 0.6192. Seed 7 gives
+##                     AR 1.0000 at eta_eff 1.0000, and is chosen BY LOWEST TRAINED COST, not by
+##                     looking at AR: cost ranks all four inits in exactly AR order here
+##                     (7 -0.698515 > 2024 -0.698473 > 31337 -0.698390 > 442 -0.697047). Both arms
+##                     use seed 7 so the paired point stays symmetric.
+##   (6, 3, 742) -> 2024  a 5->10 top-up instance. At seed 442 the M* arm REGRESSED with depth
+##                     (AR 0.8790 at p=2 -> 0.8102 at p=3) while every other n=6 instance in both
+##                     arms was depth-monotone. All four inits trained (probe_init_instance.py):
+##                     s442 dAR +0.0046, s7 +0.1198, s2024 +0.1614, s31337 +0.1600. 2024 and 31337
+##                     are the same solution (AR* 0.9834 both, cost -0.265578 both); user chose
+##                     2024. spearman(cost, AR) = -0.80 (M*) / -1.00 (M_L1), so cost-consistent.
+##   (9, 1, 642) -> 2024  and  (9, 3, 642) -> 31337   also top-up instances. At seed 442 this
+##                     instance collapsed to the blind projector in BOTH arms at BOTH depths: AR
+##                     0.5163 / 0.5164 against a blind AR_unif of 0.5376, eta_eff 0.7500. Seeds 2024
+##                     and 31337 both repair it completely (eta_eff 1.0000, AR up to ~1.0) while 7
+##                     only reaches 0.5929. Between the two survivors the rules split in OPPOSITE
+##                     directions at the two depths -- cost picks 31337 at p=1 (margin 7e-6) and
+##                     2024 at p=3 (margin 8.9e-5); the AR gap picks 2024 at p=1 (dAR +0.1307 vs
+##                     -0.0119) and 31337 at p=3 (+0.2025 vs +0.0014). The user took the AR pick at
+##                     both depths, so THESE ARE AR-TARGETED. spearman(cost, AR) = -1.00 in both arms
+##                     at both depths, i.e. cost ranks AR perfectly here and both survivors are the
+##                     top two under either rule -- only their ordering sits inside the noise.
+##
+## Set both to {} to get the untouched seed-442 sweep back. Nothing on disk is modified.
+## Resolution is IDENTICAL to export_dataset_A.py and make_fig_paired.py, so the notebook cannot
+## drift from the exported data. Substitutions at the BASE seed are the _span_expanded records
+## recomputed under the current stopping rule (their originals stored no parameters).
+BASE_SEED = 442
+## (15,3)->2024 is COST-selected, not AR-targeted: all four inits were trained, 2024 has the lowest
+## mean trained cost and wins the per-instance cost vote 5/10, and cost agrees with the AR-oracle on
+## 9 of 10 pairs. M* 0.7357 -> 0.8067, gap +0.0746 -> +0.1187, eta_eff 0.9638 -> 0.9981.
+OVERRIDES = {(9, 2): 31337, (12, 3): 7, (15, 3): 2024}
+OVERRIDES_INSTANCE = {(9, 3, 142): 7, (6, 3, 742): 2024,
+                      (9, 1, 642): 2024, (9, 3, 642): 31337}
 
 _OVCOLS = ["M_used", "share_feas", "P_feas", "eta_eff", "gap_feas", "mean_all", "mean_feas"]
 _ARMDIR = {"M*": "star", "M_L1": "L1"}
-for (_b, _p), _seed in OVERRIDES.items():
-    for _f in glob.glob(f"data_qaoa/_multistart_n{_b}p{_p}/*_s{_seed}.pkl"):
-        _r = pickle.load(open(_f, "rb"))
-        _arm = {v: k for k, v in _ARMDIR.items()}[_r["arm"]]
-        _m = ((df0.bits == _b) & (df0.layers == _p) & (df0.vseed == _r["vseed"])
-              & (df0.arm == _arm))
-        if _m.any():
-            for _c in _OVCOLS:
-                if _c in _r:
-                    df0.loc[_m, _c] = _r[_c]
-            df0.loc[_m, "qaoa_seed"] = _seed
+if "qaoa_seed" not in df0:
+    df0["qaoa_seed"] = BASE_SEED
+_SWEEPDIR = {"M*": "data_qaoa/PO_optimality_maqaoa_percentile_interp_M00",
+             "M_L1": "data_qaoa/PO_optimality_maqaoa_percentile_interp_L1_M00"}
+
+
+def _sweep_has_params(arm, b, p, v):
+    try:
+        _x = pickle.load(open(f"{_SWEEPDIR[arm]}/test_PO_bits_{b}_vseed_{v}"
+                              f"_layers_{p}_etareq_0.5.txt", "rb"))
+        return _x.get("best_pars") is not None
+    except Exception:
+        return False
+
+
+_nsub = 0
+for _i in df0.index:
+    _b, _p, _v, _arm = int(df0.bits[_i]), int(df0.layers[_i]), int(df0.vseed[_i]), df0.arm[_i]
+    _seed = OVERRIDES_INSTANCE.get((_b, _p, _v), OVERRIDES.get((_b, _p), BASE_SEED))
+    # At the base seed the published run wins whenever it already carries its circuit: multistart
+    # s442 records exist for several cells but were trained under the CURRENT stopping rule.
+    if _seed == BASE_SEED and _sweep_has_params(_arm, _b, _p, _v):
+        continue
+    _g = glob.glob(f"data_qaoa/_multistart_n{_b}p{_p}/{_ARMDIR[_arm]}"
+                   f"_n{_b}_p{_p}_v{_v}_s{_seed}.pkl")
+    if not _g:
+        continue
+    _r = pickle.load(open(_g[0], "rb"))
+    if _r.get("circuit_params") is None and _seed == BASE_SEED:
+        continue          # only displace the sweep value once the replacement is complete
+    for _c in _OVCOLS:
+        if _c in _r:
+            df0.loc[_i, _c] = _r[_c]
+    df0.loc[_i, "qaoa_seed"] = _seed
+    _nsub += 1
+print(f"dataset A: {_nsub} records taken from multistart folders")
 if "qaoa_seed" not in df0:
     df0["qaoa_seed"] = 442
 df0["qaoa_seed"] = df0["qaoa_seed"].fillna(442).astype(int)
-if OVERRIDES:
+if OVERRIDES or OVERRIDES_INSTANCE:
     print("dataset A overrides applied: " +
-          ", ".join(f"n={b} p={p} -> seed {s}" for (b, p), s in OVERRIDES.items()))
+          ", ".join([f"n={b} p={p} -> seed {s}" for (b, p), s in OVERRIDES.items()]
+                    + [f"n={b} p={p} v={v} -> seed {s}"
+                       for (b, p, v), s in OVERRIDES_INSTANCE.items()]))
     print(df0[df0.qaoa_seed != 442].groupby(["bits", "layers", "arm"]).size().to_string())
 
 
 
 ## span-proxy ladder: M0 = 0 / 1 from the expanded grid, M0 = "L1" from the tolerance test
+## NOTE: VSEED_SET does NOT apply here. `_span_expanded` and `_tolerance_objective` only ever ran the
+## ORIGINAL five vseeds (42 ... 442) and were not part of the 5 -> 10 top-up, so the ladder panels
+## show the same instances whatever VSEED_SET is set to. Filtering them by V_NEW would empty them.
 rows_l = []
 for f in sorted(glob.glob("data_qaoa/_span_expanded/*.pkl")):
     r = pickle.load(open(f, "rb"))
@@ -612,8 +693,129 @@ for n in BITS_A:
 '''
 
 
+CELL_FIGB = r'''__TAG__ panel 8 -- THE SAME PAPER FIGURE, BUT ON DATASET B (K = 4 multi-start)
+## Deliberately a carbon copy of panel 7 -- same two panels, same axis limits, same TIE -- so the
+## two cells can be read one straight after the other and any difference is the dataset, not the
+## drawing. The only thing that changes is what goes in.
+##
+##   DATASET A (panel 7)   ONE circuit init per (n, p, vseed, arm). No restarts.
+##   DATASET B (here)      FOUR inits per (n, p, vseed, arm), qaoa_seed in {442, 7, 2024, 31337},
+##                         each arm keeping its own best by LOWEST TRAINED COST.
+##
+## Cost, not AR. The selection never looks at the answer, which is what makes multi-start a method
+## rather than an oracle; on the cells where it was audited cost picked the AR-oracle's init 9/10
+## and 10/10. The two arms select independently -- that is what a practitioner deploying one M would
+## do -- while the pairing stays on the same (n, p, vseed) instance.
+##
+## Caveat, stated rather than hidden: dataset A is a mixture of stopping rules (some of its records
+## predate the 2026-09-18 change), so the A -> B difference confounds multi-start with that change.
+## B on its own is internally uniform: all 480 runs at steps=3000, tol=1e-8, patience=30.
+##
+## Every record already carries the AR it was scored with, by the same formula as panel 6, so
+## nothing is re-simulated here.
+
+import glob, pickle
+from scipy.stats import wilcoxon
+
+SEEDS_B = (442, 7, 2024, 31337)
+_ARMB   = {"star": "M*", "L1": "M_L1"}
+
+_rowsB = []
+for _f in sorted(glob.glob("data_qaoa/_multistart_n*p*/*.pkl")):
+    _r = pickle.load(open(_f, "rb"))
+    if _r.get("qaoa_seed") not in SEEDS_B or _r.get("circuit_params") is None:
+        continue
+    _rowsB.append(dict(arm=_ARMB[_r["arm"]], bits=_r["bits"], layers=_r["layers"],
+                       vseed=_r["vseed"], qaoa_seed=_r["qaoa_seed"],
+                       best_cost=_r["best_cost"], AR=_r["AR"], AR_unif=_r["AR_unif"]))
+df_B_all = pd.DataFrame(_rowsB)
+_keyB = ["arm", "bits", "layers", "vseed"]
+## best-of-K by trained cost. idxmin, NOT groupby().first(): first() fills each column
+## independently, so a single NaN AR would silently pair one init's cost with another init's AR.
+## This takes the whole winning ROW, which is the only thing that means anything here.
+assert df_B_all.AR.notna().all(), "a record has no AR -- cost-selection would pair rows wrongly"
+df_B = df_B_all.loc[df_B_all.groupby(_keyB).best_cost.idxmin()].reset_index(drop=True)
+print(f"dataset B: {len(df_B_all)} runs -> {len(df_B)} instances, "
+      f"K={int(df_B_all.groupby(_keyB).size().max())} inits each, selected by lowest trained cost")
+print("init actually chosen, by seed:", df_B.qaoa_seed.value_counts().sort_index().to_dict())
+
+MKR_B = {1: "o", 2: "s", 3: "^"}
+TIE_B = 0.01
+pvB   = df_B.pivot_table(index=["bits", "layers", "vseed"], columns="arm", values="AR").dropna()
+dltB  = pvB["M*"] - pvB["M_L1"]                   # > 0 means M* better (AR is maximised)
+nwB, ntB, nlB = (dltB > TIE_B).sum(), (dltB.abs() <= TIE_B).sum(), (dltB < -TIE_B).sum()
+BITS_B = sorted(df_B.bits.unique())
+PS_B   = sorted(df_B.layers.unique())
+
+figB, (axB, axB2) = plt.subplots(1, 2, figsize=(12.4, 4.7))
+
+axB.plot([0, 1.05], [0, 1.05], "k-", lw=1, alpha=.6, zorder=1)
+axB.fill_between([0, 1.05], 0, [0, 1.05], color="#4C72B0", alpha=.05, zorder=0)
+for (b, p, _), r in pvB.iterrows():
+    axB.scatter(r["M*"], r["M_L1"], s=42, color=COLN[b], marker=MKR_B.get(p, "D"),
+                edgecolors="k", lw=.5, alpha=.85, zorder=3)
+axB.text(.90, .46, f"$M^*$ better\n{nwB} wins", fontsize=9, color="#2f4f7f", va="top", ha="center")
+axB.text(.26, .96, f"$M_{{L1}}$ better: {nlB}", fontsize=9, color="grey", va="top", ha="center")
+axB.set_xlim(0, 1.05); axB.set_ylim(0, 1.05); axB.set_aspect("equal")
+axB.set_xlabel(r"$AR$ with $M^*$      (1 = feasible optimum)")
+axB.set_ylabel(r"$AR$ with $M_{L1}$")
+axB.set_title(f"{len(pvB)} paired instances: {nwB} wins / {ntB} ties / {nlB} losses\n"
+              f"Wilcoxon $p={wilcoxon(pvB['M*'], pvB['M_L1']).pvalue:.0e}$", fontsize=10)
+_hB  = [plt.Line2D([], [], marker="o", ls="", color=COLN[b], label=f"n={b}") for b in BITS_B]
+_hB += [plt.Line2D([], [], marker=MKR_B[p], ls="", color="k", mfc="none", label=f"p={p}")
+        for p in PS_B if p in MKR_B]
+axB.legend(handles=_hB, fontsize=8, ncol=2, framealpha=.9, loc="lower right")
+
+ggB = df_B.pivot_table(index=["bits", "layers"], columns="arm", values="AR")
+ccB = df_B.pivot_table(index=["bits", "layers"], columns="arm", values="AR", aggfunc="count")
+uuB = df_B.groupby(["bits", "layers"]).AR_unif.mean()
+xxB = np.arange(len(ggB))
+axB2.bar(xxB - .19, ggB["M_L1"], .36, color="lightgrey", edgecolor="k", lw=.7, label="$M_{L1}$")
+axB2.bar(xxB + .19, ggB["M*"], .36, color=[COLN[b] for b, _ in ggB.index], edgecolor="k", lw=.7,
+         label="$M^*$")
+axB2.plot(xxB, uuB.values, "k_", ms=20, mew=1.5, ls="", label="uniform over feasible (blind)")
+## unequal instance counts between the arms would make a cell not like-for-like -- hatch it
+for i, idx in enumerate(ggB.index):
+    if ccB.loc[idx, "M*"] != ccB.loc[idx, "M_L1"]:
+        axB2.bar(i - .19, ggB["M_L1"].loc[idx], .36, color="none", edgecolor="#b22222",
+                 lw=1.1, hatch="///", zorder=4)
+        axB2.text(i - .19, ggB["M_L1"].loc[idx] + .012,
+                  f"{int(ccB.loc[idx, 'M_L1'])}/{int(ccB.loc[idx, 'M*'])}", fontsize=6.5,
+                  color="#b22222", ha="center")
+## whichever cells M_L1 wins, derived from the data so it cannot go stale
+for i, idx in enumerate(ggB.index):
+    if ggB["M_L1"].loc[idx] > ggB["M*"].loc[idx] + TIE_B:
+        axB2.text(i, max(ggB["M_L1"].loc[idx], ggB["M*"].loc[idx]) + .03, "$M_{L1}$\nahead",
+                  fontsize=6.5, color="#b22222", ha="center")
+axB2.set_xticks(xxB)
+axB2.set_xticklabels([f"{b}\np={p}" for b, p in ggB.index], fontsize=8)
+axB2.set_xlabel("problem size $n$  /  depth $p$")
+axB2.set_ylabel(r"$AR$   (higher is better, 1 = optimum)")
+axB2.set_title(r"same cells as panel 7, now best-of-4 by trained cost", fontsize=10)
+axB2.legend(fontsize=7.5, framealpha=.9, loc="upper left", ncol=3)
+axB2.set_ylim(0, 1.22)
+
+figB.suptitle("DATASET B -- 4 inits per instance, selected by lowest trained cost", y=1.04,
+              fontsize=11)
+figB.tight_layout()
+figB.savefig("misc_plots/B_paired_headline.pdf", bbox_inches="tight")
+figB.savefig("misc_plots/B_paired_headline.png", dpi=170, bbox_inches="tight")
+plt.show()
+
+print(f"\npaired N={len(pvB)}: {nwB} wins / {ntB} ties / {nlB} losses   (tie = |dAR| <= {TIE_B})")
+print(f"mean AR  M* {pvB['M*'].mean():.4f}  vs  M_L1 {pvB['M_L1'].mean():.4f}  "
+      f"(margin {dltB.mean():+.4f})")
+for n in BITS_B:
+    s = dltB[dltB.index.get_level_values("bits") == n]
+    print(f"  n={n:2d}: {int((s > TIE_B).sum())} / {int((s.abs() <= TIE_B).sum())} / "
+          f"{int((s < -TIE_B).sum())}   margin {s.mean():+.4f}   (N={len(s)})")
+print("\nAR by (n,p), dataset B:")
+print(ggB.assign(uniform=uuB).to_string(float_format=lambda x: f"{x:.4f}"))
+'''
+
+
 CELLS = [CELL_LOAD, CELL_LADDER, CELL_HEAD, CELL_PAIRED, CELL_DIST, CELL_SHARE, CELL_AR,
-         CELL_FIG]
+         CELL_FIG, CELL_FIGB]
 
 
 def main():

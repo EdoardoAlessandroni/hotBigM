@@ -11,10 +11,12 @@ convergence tolerance -- BOTH are required, neither alone does anything -- the c
 blind projector and starts ranking feasible states by objective. This sweep asks the paper's actual
 question in that regime: does M* buy objective quality *over the naive M_L1 baseline*?
 
-Grid: n_bits in {6,9,12,15} x p in {1,2,3} x 5 vseeds x {M*, M_L1}.
+Grid: n_bits in {6,9,12,15} x p in {1,2,3} x 10 vseeds x {M*, M_L1}  =  240 runs.
 p = 2 is included because the earlier span-variant runs only covered p in {1,3} and {3,5}.
 n=15 originally ran 3 vseeds (it is ~4x the cost of n=12 and the effect is weakest there); it was
-topped up to 5 on 2026-09-18 so every cell averages over the same instance count.
+topped up to 5 on 2026-09-18 so every cell averages over the same instance count. On 2026-09-19 all
+four sizes went 5 -> 10 instances (42..442 plus 542..942) purely to raise the statistics -- see
+HANDOFF.md section 9. Use BITS="6,15" to scope a re-run to a subset of sizes.
 
 Settings differing from the original sweep, and why:
   M0_ref = 0.0     the point of the experiment
@@ -56,9 +58,18 @@ OUTDIRS = {
 for d in OUTDIRS.values():
     os.makedirs(d, exist_ok=True)
 
-VSEEDS = {6: (42, 142, 242, 342, 442), 9: (42, 142, 242, 342, 442),
-          12: (42, 142, 242, 342, 442), 15: (42, 142, 242, 342, 442)}
-BITS = (6, 9, 12, 15)
+# VSEEDS_EXTRA="542,642,742,842,942" APPENDS instances to every size, for a statistics top-up.
+# Default empty, so the published grid is bit-identical unless this is set. Finished runs are
+# skipped below, so re-running with it set computes only the new instances.
+_BASE_V = (42, 142, 242, 342, 442)
+_EXTRA_V = (tuple(int(x) for x in os.environ["VSEEDS_EXTRA"].split(","))
+            if os.environ.get("VSEEDS_EXTRA") else ())
+VSEEDS = {n: _BASE_V + _EXTRA_V for n in (6, 9, 12, 15)}
+# BITS="6,15" restricts the sweep to those sizes. Default is the full grid, so the published
+# behaviour is unchanged. Used to top up one size at a time (smallest and largest first) so each
+# size's AR/eta_eff can be inspected before committing cores to the next one.
+BITS = (tuple(int(x) for x in os.environ["BITS"].split(","))
+        if os.environ.get("BITS") else (6, 9, 12, 15))
 LAYERS = (1, 2, 3)
 ARMS = tuple(os.environ.get("ARMS", "star,L1").split(","))
 

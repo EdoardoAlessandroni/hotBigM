@@ -1,0 +1,10 @@
+target n=6 p=3 v=242   best_cost = -0.26523962965007863
+...breaking at iteration 959 out of 3000
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+ladder done in 804s; 0 recorded steps
+final-depth steps: 0
+Traceback (most recent call last):
+  File "/home/edo/Desktop/proj/hot-bigM/code/qaoa/recover_original.py", line 113, in <module>
+    f"range [{traj[0][1]:.12f} .. {traj[-1][1]:.12f}]")
+              ~~~~^^^
+IndexError: list index out of range

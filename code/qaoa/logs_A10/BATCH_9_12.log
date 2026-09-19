@@ -1,0 +1,3 @@
+pool 1: seed-442 sweep, BITS=9,12 x 3 depths x 5 new vseeds x 2 arms, 7 workers
+pool 2: override cells 9:2:31337 12:3:7 at their own init, 3 workers
+SIZE BATCH 9,12 DONE at 2026-09-19 13:26

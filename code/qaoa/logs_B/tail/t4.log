@@ -1,0 +1,8 @@
+cells [(12, 3)]  worker 0/1: 1 configs
+star_n12_p3_v142_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 1369 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1799 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 939 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=142 s=31337:  AR=0.9258 (blind 0.7770)  cost=-1.74938589  eta=1.0000  [1505s]
+worker 0 done

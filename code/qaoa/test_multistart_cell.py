@@ -36,7 +36,8 @@ else:
     CELLS = [(int(os.environ.get("N_BITS", 6)), int(os.environ.get("LAYERS", 3)))]
 ETA_REQ, M_SEED, M0_REF = 0.5, 12345, 0.0
 STEPS, TOL, PATIENCE = 3000, 1e-8, 30
-VSEEDS = (42, 142, 242, 342, 442)
+# VSEEDS="142" narrows to a single instance, for targeted searches on one problematic run.
+VSEEDS = tuple(int(x) for x in os.environ.get("VSEEDS", "42,142,242,342,442").split(","))
 # SEEDS / ARMS are overridable so a targeted backfill (e.g. "just seed 442, just the M* arm, to
 # recover circuit_params for the imported p=3 runs") reuses this exact code path.
 QAOA_SEEDS = tuple(int(x) for x in os.environ.get("SEEDS", "442,7,2024,31337").split(","))

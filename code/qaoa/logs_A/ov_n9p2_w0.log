@@ -1,0 +1,21 @@
+cells [(9, 2)]  worker 0/3: 4 configs
+star_n9_p2_v42_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 2779 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1119 out of 3000 (best cost improved by 9.053e-09 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v= 42 s=31337:  AR=0.6010 (blind 0.4515)  cost=-0.69935350  eta=1.0000  [704s]
+L1_n9_p2_v142_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 1779 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1939 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=142 s=31337:  AR=0.8300 (blind 0.6192)  cost=-0.69973870  eta=1.0000  [682s]
+star_n9_p2_v342_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 2709 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=342 s=31337:  AR=0.8704 (blind 0.6806)  cost=-0.70076573  eta=1.0000  [1000s]
+L1_n9_p2_v442_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 2479 out of 3000 (best cost improved by 8.946e-09 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1149 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=31337:  AR=0.7194 (blind 0.6568)  cost=-0.70005304  eta=1.0000  [582s]
+worker 0 done

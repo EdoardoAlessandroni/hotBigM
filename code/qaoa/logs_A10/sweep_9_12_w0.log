@@ -1,0 +1,49 @@
+worker 0/7: 18 configs
+test_PO_bits_9_vseed_42_layers_1_etareq_0.5.txt [star] exists, skipping
+test_PO_bits_9_vseed_342_layers_1_etareq_0.5.txt [L1] exists, skipping
+...breaking at iteration 1739 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n= 9 p=1 v=742:  M=    63.44  share=1.65e-03  P_feas=1.0000  eta=1.0000  gap=0.1023  [257s]
+test_PO_bits_12_vseed_42_layers_1_etareq_0.5.txt [L1] exists, skipping
+test_PO_bits_12_vseed_442_layers_1_etareq_0.5.txt [star] exists, skipping
+...breaking at iteration 1439 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.592
+L1   n=12 p=1 v=742:  M=    901.8  share=1.16e-04  P_feas=0.5915  eta=0.5915  gap=0.9551  [475s]
+test_PO_bits_9_vseed_142_layers_2_etareq_0.5.txt [star] exists, skipping
+test_PO_bits_9_vseed_442_layers_2_etareq_0.5.txt [L1] exists, skipping
+...breaking at iteration 1629 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 759 out of 3000 (best cost improved by 8.241e-09 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n= 9 p=2 v=842:  M=    62.23  share=5.73e-04  P_feas=1.0000  eta=1.0000  gap=0.5495  [385s]
+test_PO_bits_12_vseed_142_layers_2_etareq_0.5.txt [L1] exists, skipping
+...breaking at iteration 1369 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1119 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+star n=12 p=2 v=542:  M=    93.67  share=3.76e-04  P_feas=0.7500  eta=0.7500  gap=0.2945  [965s]
+...breaking at iteration 1429 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1009 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   n=12 p=2 v=842:  M=      782  share=9.98e-05  P_feas=0.7500  eta=0.7500  gap=0.7139  [632s]
+test_PO_bits_9_vseed_242_layers_3_etareq_0.5.txt [star] exists, skipping
+...breaking at iteration 1839 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1139 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 649 out of 3000 (best cost improved by 9.632e-09 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   n= 9 p=3 v=542:  M=    100.7  share=2.00e-04  P_feas=1.0000  eta=0.7504  gap=0.7973  [412s]
+...breaking at iteration 2799 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1189 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 899 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n= 9 p=3 v=942:  M=     61.8  share=2.04e-03  P_feas=1.0000  eta=1.0000  gap=0.0001  [442s]
+test_PO_bits_12_vseed_242_layers_3_etareq_0.5.txt [L1] exists, skipping
+...breaking at iteration 1419 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1999 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 749 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n=12 p=3 v=642:  M=    71.17  share=1.84e-03  P_feas=1.0000  eta=1.0000  gap=0.7574  [1050s]
+...breaking at iteration 1379 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 969 out of 3000 (best cost improved by 2.252e-09 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 879 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   n=12 p=3 v=942:  M=    974.1  share=1.30e-04  P_feas=1.0000  eta=1.0000  gap=0.8643  [869s]
+worker 0 done, 91.5 min

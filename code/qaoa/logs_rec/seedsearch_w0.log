@@ -1,0 +1,7 @@
+cells [(9, 3)]  worker 0/3: 1 configs
+...breaking at iteration 2789 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1189 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 849 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=142 s=    7:  AR=1.0000 (blind 0.6192)  cost=-0.69851541  eta=1.0000  [990s]
+worker 0 done

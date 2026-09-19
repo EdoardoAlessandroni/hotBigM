@@ -1,0 +1,56 @@
+cells [(6, 1), (9, 1), (6, 2), (6, 3), (9, 2), (12, 1), (9, 3), (12, 2), (12, 3)]  worker 19/20: 18 configs
+L1_n6_p1_v242_s7.pkl complete, skipping
+L1_n6_p1_v442_s31337.pkl complete, skipping
+...breaking at iteration 1629 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s=    7:  AR=0.6453 (blind 0.4763)  cost=-0.70005503  eta=1.0000  [200s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=31337:  AR=0.9975 (blind 0.6568)  cost=-0.70012212  eta=1.0000  [360s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.989
+L1   v=242 s=    7:  AR=0.6438 (blind 0.5810)  cost=-0.26254165  eta=0.9888  [419s]
+...breaking at iteration 1399 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.995
+L1   v=442 s=31337:  AR=0.5679 (blind 0.5257)  cost=-0.26254772  eta=0.9950  [330s]
+L1_n6_p3_v242_s7.pkl has no circuit_params -- recomputing
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.953
+L1   v=242 s=    7:  AR=0.6854 (blind 0.5810)  cost=-0.26266660  eta=0.9528  [780s]
+L1_n6_p3_v442_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 1469 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=31337:  AR=0.6988 (blind 0.5257)  cost=-0.26290541  eta=1.0000  [678s]
+L1_n9_p2_v242_s7.pkl has no circuit_params -- recomputing
+...breaking at iteration 1659 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 839 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s=    7:  AR=0.7017 (blind 0.4763)  cost=-0.70013331  eta=1.0000  [301s]
+L1_n9_p2_v442_s31337.pkl complete, skipping
+...breaking at iteration 1609 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s=    7:  AR=0.3019 (blind 0.4443)  cost=-1.74999456  eta=1.0000  [445s]
+...breaking at iteration 1389 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.592
+L1   v=442 s=31337:  AR=0.5708 (blind 0.5762)  cost=-1.73944633  eta=0.5915  [322s]
+...breaking at iteration 1499 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 969 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 629 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s=    7:  AR=0.7017 (blind 0.4763)  cost=-0.70019667  eta=1.0000  [404s]
+...breaking at iteration 2219 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 2009 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1949 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=31337:  AR=0.9731 (blind 0.6568)  cost=-0.70032775  eta=1.0000  [1019s]
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s=    7:  AR=0.7560 (blind 0.4443)  cost=-1.75006377  eta=1.0000  [1851s]
+...breaking at iteration 1379 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1099 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+L1   v=442 s=31337:  AR=0.5708 (blind 0.5762)  cost=-1.74377797  eta=0.7500  [671s]
+L1_n12_p3_v242_s7.pkl complete, skipping
+L1_n12_p3_v442_s31337.pkl has no circuit_params -- recomputing
+...breaking at iteration 1339 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 2549 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 779 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=442 s=31337:  AR=0.5697 (blind 0.5762)  cost=-1.75004078  eta=1.0000  [1155s]
+worker 19 done

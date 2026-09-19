@@ -1,2 +1,11 @@
 cells [(6, 3), (9, 3), (12, 3)]  worker 3/6: 2 configs
 star_n6_p3_v342_s442.pkl has no circuit_params -- recomputing
+...breaking at iteration 2639 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1369 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=342 s=  442:  AR=0.8359 (blind 0.5439)  cost=-0.26561170  eta=1.0000  [635s]
+...breaking at iteration 2059 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1149 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=442 s=  442:  AR=0.9999 (blind 0.6568)  cost=-0.70200086  eta=1.0000  [1147s]
+worker 3 done

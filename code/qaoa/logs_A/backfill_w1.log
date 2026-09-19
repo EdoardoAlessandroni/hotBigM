@@ -1,2 +1,18 @@
 cells [(6, 3), (9, 3), (12, 3)]  worker 1/6: 3 configs
 star_n6_p3_v142_s442.pkl has no circuit_params -- recomputing
+...breaking at iteration 2769 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1559 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=142 s=  442:  AR=0.9867 (blind 0.6814)  cost=-0.26343503  eta=1.0000  [678s]
+...breaking at iteration 1459 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 929 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1589 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star v=242 s=  442:  AR=0.6087 (blind 0.4763)  cost=-0.70070744  eta=1.0000  [838s]
+star_n12_p3_v342_s442.pkl has no circuit_params -- recomputing
+...breaking at iteration 1449 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 989 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 779 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.75
+star v=342 s=  442:  AR=0.6897 (blind 0.6665)  cost=-1.74398797  eta=0.7500  [1475s]
+worker 1 done

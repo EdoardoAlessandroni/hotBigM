@@ -1,0 +1,7 @@
+[chain] waiting for n=15 p=3 to finish (need 40)
+[chain] n=15 p=3 complete at 02:18 -- starting B workers 6-19
+DATASET B WORKERS 6-19 DONE
+[chain] waiting for all of n<=12 B (need 360)
+[chain] n<=12 dataset B complete at 04:50 -- starting n=15 p=1/p=2
+DATASET B n=15 DONE
+[chain] DATASET B FULLY COMPLETE at 07:51

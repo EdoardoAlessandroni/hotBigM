@@ -1,1 +1,16 @@
 cells [(15, 3)]  worker 5/14: 3 configs
+...breaking at iteration 1509 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 849 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.982
+L1   v= 42 s= 2024:  AR=0.6126 (blind 0.5442)  cost=-3.41230056  eta=0.9817  [5637s]
+...breaking at iteration 1489 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1299 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 789 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+L1   v=242 s=    7:  AR=0.4288 (blind 0.3801)  cost=-3.41251044  eta=0.9999  [4742s]
+...breaking at iteration 1409 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1829 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 939 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.875
+L1   v=442 s=  442:  AR=0.7755 (blind 0.6559)  cost=-3.40939217  eta=0.8750  [4763s]
+worker 5 done

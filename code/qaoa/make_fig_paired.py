@@ -59,16 +59,66 @@ df = df[df.layers.isin(DEPTHS)].reset_index(drop=True)
 # between p=1 and p=3, i.e. AR-TARGETED -- fine for looking, not defensible in the paper; cost would
 # have picked 2024. (12,3)->2024 is the lowest-mean-cost init and flips that cell's gap negative.
 # Must stay in sync with the OVERRIDES dict in patch_nb_M00.py. Set to {} for the raw sweep.
-OVERRIDES = {(9, 2): 31337, (12, 3): 7}
+# Dataset A resolution -- IDENTICAL rule to export_dataset_A.py, so the figure cannot drift from the
+# data actually shipped. Each (cell, vseed) has exactly one init; wherever a multistart record exists
+# for that init it wins, because that is the record carrying circuit_params.
+#   SEEDS_CELL      whole cell, both arms. AR-TARGETED -- fine for looking, NOT defensible in the
+#                   paper (cost would have picked 2024 for both).
+#   SEEDS_INSTANCE  one instance, both arms. At (9,3,142) cost ranks all four inits in exact AR
+#                   order, so no AR knowledge was used. (6,3,742) is a top-up instance whose seed-442
+#                   M* run regressed with depth; of its four inits, 2024 and 31337 are the same
+#                   solution to 4 dp and the user chose 2024. (9,1,642) and (9,3,642) are top-up
+#                   instances where seed 442 collapsed to the blind projector in BOTH arms at BOTH
+#                   depths (AR 0.516 against a blind 0.5376, eta_eff 0.7500); the user took the AR
+#                   pick at each depth, which is 2024 at p=1 and 31337 at p=3. Cost splits the other
+#                   way by 7e-6 / 8.9e-5. See export_dataset_A.py for the full four-init table.
+# Substitutions at the BASE seed are the _span_expanded records recomputed under the current stopping
+# rule: their 2026-09-17 originals stored no parameters and that trainer no longer exists.
+BASE_SEED = 442
+SEEDS_CELL = {(9, 2): 31337, (12, 3): 7, (15, 3): 2024}   # (15,3) is COST-selected, not AR-targeted
+SEEDS_INSTANCE = {(9, 3, 142): 7, (6, 3, 742): 2024,
+                  (9, 1, 642): 2024, (9, 3, 642): 31337}
 _A = {"star": "M*", "L1": "M_L1"}
-for (_b, _p), _s in OVERRIDES.items():
-    for _f in glob.glob(f"data_qaoa/_multistart_n{_b}p{_p}/*_s{_s}.pkl"):
-        _r = pickle.load(open(_f, "rb"))
-        _m = ((df.bits == _b) & (df.layers == _p) & (df.vseed == _r["vseed"])
-              & (df.arm == _A[_r["arm"]]))
-        df.loc[_m, ["mean_feas", "share"]] = _r["mean_feas"], _r["share_feas"]
-if OVERRIDES:
-    print("dataset A overrides: " + ", ".join(f"n={b} p={p}->s{s}" for (b, p), s in OVERRIDES.items()))
+_D = {v: k for k, v in _A.items()}
+
+
+def _seed_for(b, p, v):
+    return SEEDS_INSTANCE.get((b, p, v), SEEDS_CELL.get((b, p), BASE_SEED))
+
+
+_SWEEPDIR = {"M*": "data_qaoa/PO_optimality_maqaoa_percentile_interp_M00",
+             "M_L1": "data_qaoa/PO_optimality_maqaoa_percentile_interp_L1_M00"}
+
+
+def _sweep_has_params(arm, b, p, v):
+    """Does the published run already carry its trained circuit?"""
+    try:
+        _x = pickle.load(open(f"{_SWEEPDIR[arm]}/test_PO_bits_{b}_vseed_{v}"
+                              f"_layers_{p}_etareq_0.5.txt", "rb"))
+        return _x.get("best_pars") is not None
+    except Exception:
+        return False
+
+
+_sub = 0
+for _i in df.index:
+    _b, _p, _v, _arm = int(df.bits[_i]), int(df.layers[_i]), int(df.vseed[_i]), df.arm[_i]
+    _s = _seed_for(_b, _p, _v)
+    # At the base seed the PUBLISHED run wins whenever it has parameters. Multistart s442 records
+    # exist for several cells (dataset B ran seed 442 too) but were trained under the current
+    # stopping rule, so using them would silently move numbers that are already final.
+    if _s == BASE_SEED and _sweep_has_params(_arm, _b, _p, _v):
+        continue
+    _g = glob.glob(f"data_qaoa/_multistart_n{_b}p{_p}/{_D[_arm]}_n{_b}_p{_p}_v{_v}_s{_s}.pkl")
+    if not _g:
+        continue
+    _r = pickle.load(open(_g[0], "rb"))
+    if _r.get("circuit_params") is None and _s == BASE_SEED:
+        continue          # only displace the sweep value once the replacement is complete
+    df.loc[_i, ["mean_feas", "share"]] = _r["mean_feas"], _r["share_feas"]
+    _sub += 1
+print(f"dataset A: {_sub} records from multistart  "
+      f"(cell {SEEDS_CELL}, instance {SEEDS_INSTANCE}, rest s{BASE_SEED})")
 
 _cache = {}
 def feas_span(b, v):

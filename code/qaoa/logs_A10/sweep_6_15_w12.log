@@ -1,0 +1,20 @@
+worker 12/14: 8 configs
+...breaking at iteration 2729 out of 3000 (best cost improved by 9.099e-09 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n= 6 p=1 v=642:  M=    27.58  share=4.65e-03  P_feas=1.0000  eta=1.0000  gap=0.8996  [163s]
+test_PO_bits_15_vseed_342_layers_1_etareq_0.5.txt [star] exists, skipping
+test_PO_bits_6_vseed_42_layers_2_etareq_0.5.txt [star] exists, skipping
+...breaking at iteration 2859 out of 3000 (best cost improved by 3.574e-09 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 1.0
+star n= 6 p=2 v=742:  M=    7.034  share=7.93e-03  P_feas=1.0000  eta=1.0000  gap=0.3742  [475s]
+test_PO_bits_6_vseed_442_layers_3_etareq_0.5.txt [star] exists, skipping
+test_PO_bits_15_vseed_142_layers_2_etareq_0.5.txt [star] exists, skipping
+...breaking at iteration 1359 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.999
+star n=15 p=2 v=842:  M=    229.1  share=5.06e-04  P_feas=1.0000  eta=0.9991  gap=0.8001  [6034s]
+...breaking at iteration 1329 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1039 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+...breaking at iteration 1179 out of 3000 (best cost improved by 0.000e+00 < 1.0e-08 over the last 300 steps)
+Etas: req = 0.5 	 gua = 0.5 	 eff_ex = 0.997
+star n=15 p=3 v=542:  M=    135.3  share=3.65e-04  P_feas=1.0000  eta=0.9969  gap=0.6096  [4024s]
+worker 12 done, 178.3 min
