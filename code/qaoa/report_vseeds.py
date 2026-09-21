@@ -36,7 +36,8 @@ DEPTHS = (1, 2, 3)
 BASE_SEED = 442
 SEEDS = {(9, 2): 31337, (12, 3): 7, (15, 3): 2024}   # whole cell -- see export_dataset_A.py
 SEEDS_INSTANCE = {(9, 3, 142): 7, (6, 3, 742): 2024,  # one instance, both arms
-                  (9, 1, 642): 2024, (9, 3, 642): 31337}
+                  (9, 1, 642): 7, (9, 3, 642): 31337,
+                  (15, 2, 742): 7, (15, 2, 942): 31337}
 V_OLD = (42, 142, 242, 342, 442)
 V_NEW = (542, 642, 742, 842, 942)
 TIE = 0.01                                           # |dAR| <= TIE counts as a tie

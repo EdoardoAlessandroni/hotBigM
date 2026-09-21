@@ -1,2 +1,9 @@
 __pycache__/
 venv/
+
+# working files that must never be committed (2026-09-21)
+code/qaoa/HANDOFF.md
+code/qaoa/logs_A10/
+code/qaoa/misc_plots/
+code/qaoa/marco_codes/
+code/qaoa/*.ipynb.bak*
